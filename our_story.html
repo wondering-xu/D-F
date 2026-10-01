@@ -31,6 +31,8 @@
             box-shadow: 0 0 20px rgba(0,0,0,0.05);
             display: flex;
             flex-direction: column;
+            padding-bottom: 70px; /* 留出底部导航空间 */
+            box-sizing: border-box;
         }
         header {
             padding: 20px;
@@ -59,6 +61,43 @@
             flex: 1;
             padding: 20px;
             overflow-y: auto;
+        }
+        /* 底部导航栏 */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 600px;
+            background: #fff;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 0;
+            z-index: 100;
+        }
+        .nav-item {
+            background: none;
+            border: none;
+            color: #888;
+            font-size: 0.8rem;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 3px;
+        }
+        .nav-item.active {
+            color: var(--primary-color);
+            font-weight: bold;
+        }
+        /* 版块隐藏与显示 */
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
         }
         /* 密码锁定屏样式 */
         #lock-screen {
@@ -97,7 +136,7 @@
             border-radius: 6px;
             cursor: pointer;
         }
-        /* 卡片样式 */
+        /* 卡片与通用样式 */
         .card {
             background: #fff;
             border: 1px solid var(--border-color);
@@ -113,7 +152,7 @@
             color: #aaa;
             margin-bottom: 8px;
         }
-        input[type="date"], textarea {
+        textarea, input[type="text"] {
             width: 100%;
             padding: 10px;
             border: 1px solid var(--border-color);
@@ -152,12 +191,24 @@
             font-size: 0.8rem;
             font-weight: bold;
         }
+        /* 心愿单样式 */
+        .bucket-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px dashed var(--border-color);
+        }
+        .bucket-item.completed span {
+            text-decoration: line-through;
+            color: #aaa;
+        }
     </style>
 </head>
 <body>
 
     <!-- 密码验证遮罩层 -->
-    <div id="lock-screen" style="display: none;">
+    <div id="lock-screen">
         <div class="lock-box">
             <h3 data-i18n="lock_title">🔒 Our Secret Space</h3>
             <p style="font-size: 0.85rem; color: #666;" data-i18n="lock_subtitle">Please enter passcode</p>
@@ -179,21 +230,54 @@
         <div class="content-area">
             <div class="sync-status" id="sync-status">Status: Ready</div>
             
-            <!-- 发布新内容区域 -->
-            <div class="card">
-                <input type="date" id="new-post-date">
-                <textarea id="new-post-content" data-i18n-ph="post_ph" placeholder="What sweet thing happened today? Write it down..."></textarea>
-                <button class="primary-btn" onclick="addNewPost()" data-i18n="post_btn">Publish to Cloud</button>
+            <!-- 版块 1：日常时间轴 (Journal) -->
+            <div id="tab-journal" class="tab-content active">
+                <div class="card">
+                    <textarea id="new-post-content" data-i18n-ph="post_ph" placeholder="What sweet thing happened today? Write it down..."></textarea>
+                    <button class="primary-btn" onclick="addNewPost()" data-i18n="post_btn">Publish to Cloud</button>
+                </div>
+                <div id="posts-container"></div>
             </div>
 
-            <!-- 内容列表展示区 -->
-            <div id="posts-container">
-                <!-- 动态加载内容 -->
+            <!-- 版块 2：心愿清单 (Bucket List) -->
+            <div id="tab-bucket" class="tab-content">
+                <div class="card">
+                    <h3 style="margin-top:0; font-size:1rem; color:var(--primary-color);" data-i18n="bucket_title">✨ Our Bucket List</h3>
+                    <input type="text" id="new-bucket-input" data-i18n-ph="bucket_ph" placeholder="Add a new dream to do together...">
+                    <button class="primary-btn" onclick="addBucketItem()" data-i18n="bucket_btn">Add Wish</button>
+                </div>
+                <div class="card" id="bucket-container"></div>
+            </div>
+
+            <!-- 版块 3：纪念小纸条/留言板 (Notes) -->
+            <div id="tab-notes" class="tab-content">
+                <div class="card">
+                    <h3 style="margin-top:0; font-size:1rem; color:var(--primary-color);" data-i18n="notes_title">💌 Sweet Notes</h3>
+                    <textarea id="new-note-content" data-i18n-ph="notes_ph" placeholder="Leave a romantic note for each other..."></textarea>
+                    <button class="primary-btn" onclick="addNoteItem()" data-i18n="notes_btn">Leave Note</button>
+                </div>
+                <div id="notes-container"></div>
             </div>
         </div>
+
+        <!-- 底部导航切换栏 -->
+        <nav class="bottom-nav">
+            <button class="nav-item active" onclick="switchTab('journal', this)">
+                <span>📖</span>
+                <span data-i18n="nav_journal">Journal</span>
+            </button>
+            <button class="nav-item" onclick="switchTab('bucket', this)">
+                <span>🎯</span>
+                <span data-i18n="nav_bucket">Bucket List</span>
+            </button>
+            <button class="nav-item" onclick="switchTab('notes', this)">
+                <span>💌</span>
+                <span data-i18n="nav_notes">Notes</span>
+            </button>
+        </nav>
     </div>
 
-   <script>
+    <script>
         // ================= 配置区域 =================
         const SECRET_PASS = "42924"; // 你们的专属密码
         const LOVE_START_DATE = "2026-04-06"; // 在一起的纪念日
@@ -203,6 +287,7 @@
         const JSONBIN_BIN_ID = "6abdb802ac6210605a077b5f";
         // ============================================
 
+        // 双语字典（默认英文）
         const i18n = {
             zh: {
                 lock_title: "🔒 我们的专属空间",
@@ -211,6 +296,15 @@
                 main_title: "Our Sweet Journal",
                 post_ph: "今天发生了什么甜蜜的事，写下来吧...",
                 post_btn: "发布到云端同步",
+                bucket_title: "✨ 我们的愿望清单",
+                bucket_ph: "添加一个以后想一起完成的愿望...",
+                bucket_btn: "添加愿望",
+                notes_title: "💌 浪漫小纸条",
+                notes_ph: "给对方留下一句话吧...",
+                notes_btn: "发送纸条",
+                nav_journal: "日记",
+                nav_bucket: "心愿",
+                nav_notes: "纸条",
                 sync_ready: "状态: 准备就绪",
                 sync_loading: "正在从云端同步...",
                 sync_success: "状态: 已与云端同步最新数据 ✨",
@@ -229,6 +323,15 @@
                 main_title: "Our Sweet Journal",
                 post_ph: "What sweet thing happened today? Write it down...",
                 post_btn: "Publish to Cloud",
+                bucket_title: "✨ Our Bucket List",
+                bucket_ph: "Add a new dream to do together...",
+                bucket_btn: "Add Wish",
+                notes_title: "💌 Sweet Notes",
+                notes_ph: "Leave a romantic note for each other...",
+                notes_btn: "Leave Note",
+                nav_journal: "Journal",
+                nav_bucket: "Bucket List",
+                nav_notes: "Notes",
                 sync_ready: "Status: Ready",
                 sync_loading: "Syncing from cloud...",
                 sync_success: "Status: Synced with cloud ✨",
@@ -243,12 +346,18 @@
         };
 
         let currentLang = localStorage.getItem('love_lang') || 'en';
+        let appData = {
+            posts: [],
+            bucket: [],
+            notes: []
+        };
 
         function toggleLanguage() {
             currentLang = currentLang === 'zh' ? 'en' : 'zh';
             localStorage.setItem('love_lang', currentLang);
             updateTexts();
             calcDays();
+            renderAll();
         }
 
         function updateTexts() {
@@ -266,6 +375,16 @@
             });
         }
 
+        // 切换导航版块
+        function switchTab(tabName, btnElement) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.bottom-nav .nav-item').forEach(el => el.classList.remove('active'));
+            
+            document.getElementById('tab-' + tabName).classList.add('active');
+            btnElement.classList.add('active');
+        }
+
+        // 检查密码
         function checkPass() {
             const input = document.getElementById('pass-input').value;
             if (input === SECRET_PASS) {
@@ -277,47 +396,36 @@
             }
         }
 
-        // 页面加载检查（实现免密登录：如果之前验证过，直接进，不弹密码框）
         window.onload = function() {
             updateTexts();
-            
-            // 默认给日期输入框填入今天
-            document.getElementById('new-post-date').valueAsDate = new Date();
-
             if (localStorage.getItem('auth_passed') === 'true') {
                 document.getElementById('lock-screen').style.display = 'none';
                 initApp();
-            } else {
-                // 如果没验证过才显示密码框
-                document.getElementById('lock-screen').style.display = 'flex';
             }
             calcDays();
         }
 
-        // 计算在一起的天数（基于 2026-04-06）
+        // 计算在一起的天数（以 2026-04-06 为准）
         function calcDays() {
             const start = new Date(LOVE_START_DATE);
             const today = new Date();
-            // 清除时间时分秒干扰，只算天数差
-            start.setHours(0,0,0,0);
-            today.setHours(0,0,0,0);
             const diff = Math.floor((today - start) / (1000 * 60 * 60 * 24));
             const dict = i18n[currentLang];
             document.getElementById('days-counter').innerText = `${dict.days_prefix}${Math.max(0, diff)}${dict.days_suffix}`;
         }
 
-        let posts = [];
-
+        // 初始化应用
         async function initApp() {
             await fetchFromCloud();
-            renderPosts();
+            renderAll();
         }
 
+        // 从云端加载数据
         async function fetchFromCloud() {
             const dict = i18n[currentLang];
             if (JSONBIN_MASTER_KEY.includes("YOUR_MASTER")) {
-                document.getElementById('sync-status').innerText = currentLang === 'zh' ? "提示: 尚未配置云端，当前为本地模式" : "Tip: Local mode";
-                posts = JSON.parse(localStorage.getItem('local_posts') || '[]');
+                document.getElementById('sync-status').innerText = currentLang === 'zh' ? "提示: 尚未配置云端密钥，当前为本地模式" : "Tip: Cloud key not set, local mode";
+                loadLocal();
                 return;
             }
 
@@ -327,18 +435,26 @@
                     headers: { 'X-Master-Key': JSONBIN_MASTER_KEY }
                 });
                 const data = await response.json();
-                posts = data.record.posts || [];
+                appData = data.record || { posts: [], bucket: [], notes: [] };
                 document.getElementById('sync-status').innerText = dict.sync_success;
             } catch (error) {
                 console.error("同步失败", error);
                 document.getElementById('sync-status').innerText = dict.sync_error;
-                posts = JSON.parse(localStorage.getItem('local_posts') || '[]');
+                loadLocal();
             }
         }
 
+        function loadLocal() {
+            const local = localStorage.getItem('love_app_data');
+            if (local) {
+                appData = JSON.parse(local);
+            }
+        }
+
+        // 保存数据到云端
         async function saveToCloud() {
             const dict = i18n[currentLang];
-            localStorage.setItem('local_posts', JSON.stringify(posts)); 
+            localStorage.setItem('love_app_data', JSON.stringify(appData)); 
 
             if (JSONBIN_MASTER_KEY.includes("YOUR_MASTER")) return;
 
@@ -350,7 +466,7 @@
                         'Content-Type': 'application/json',
                         'X-Master-Key': JSONBIN_MASTER_KEY
                     },
-                    body: JSON.stringify({ posts: posts })
+                    body: JSON.stringify(appData)
                 });
                 document.getElementById('sync-status').innerText = dict.sync_done;
             } catch (error) {
@@ -358,22 +474,23 @@
             }
         }
 
+        // 渲染所有版块
+        function renderAll() {
+            renderPosts();
+            renderBucket();
+            renderNotes();
+        }
+
+        // 1. 发布日记
         async function addNewPost() {
-            const postDate = document.getElementById('new-post-date').value;
             const textContent = document.getElementById('new-post-content').value.trim();
-            
-            if (!textContent) {
-                alert(currentLang === 'zh' ? '内容不能为空哦！' : 'Content cannot be empty!');
-                return;
-            }
+            if (!textContent) return;
 
-            const newPost = {
+            appData.posts.unshift({
                 id: Date.now(),
-                time: postDate || new Date().toISOString().split('T')[0],
+                time: new Date().toLocaleString(),
                 content: textContent
-            };
-
-            posts.unshift(newPost);
+            });
             document.getElementById('new-post-content').value = '';
             
             renderPosts();
@@ -385,19 +502,102 @@
             container.innerHTML = '';
             const dict = i18n[currentLang];
             
-            if (posts.length === 0) {
+            if (!appData.posts || appData.posts.length === 0) {
                 container.innerHTML = `<p style="text-align:center; color:#aaa; font-size:0.9rem;">${dict.empty_text}</p>`;
                 return;
             }
 
-            posts.forEach(post => {
+            appData.posts.forEach(post => {
                 const card = document.createElement('div');
                 card.className = 'card';
                 card.innerHTML = `
-                    <div class="card-header">
-                        <span style="font-weight: bold; color: var(--primary-color);">${post.time}</span>
-                    </div>
+                    <div class="card-header"><span>${post.time}</span></div>
                     <div style="white-space: pre-wrap; font-size: 0.95rem; line-height: 1.4;">${post.content}</div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // 2. 心愿单逻辑
+        async function addBucketItem() {
+            const text = document.getElementById('new-bucket-input').value.trim();
+            if (!text) return;
+
+            if (!appData.bucket) appData.bucket = [];
+            appData.bucket.unshift({ id: Date.now(), text: text, completed: false });
+            document.getElementById('new-bucket-input').value = '';
+
+            renderBucket();
+            await saveToCloud();
+        }
+
+        async function toggleBucket(id) {
+            const item = appData.bucket.find(b => b.id === id);
+            if (item) {
+                item.completed = !item.completed;
+                renderBucket();
+                await saveToCloud();
+            }
+        }
+
+        function renderBucket() {
+            const container = document.getElementById('bucket-container');
+            container.innerHTML = '';
+            const dict = i18n[currentLang];
+
+            if (!appData.bucket || appData.bucket.length === 0) {
+                container.innerHTML = `<p style="text-align:center; color:#aaa; font-size:0.9rem;">${dict.empty_text}</p>`;
+                return;
+            }
+
+            appData.bucket.forEach(item => {
+                const div = document.createElement('div');
+                div.className = `bucket-item ${item.completed ? 'completed' : ''}`;
+                div.innerHTML = `
+                    <span style="font-size:0.95rem; cursor:pointer;" onclick="toggleBucket(${item.id})">${item.completed ? '✅' : '⏳'} ${item.text}</span>
+                    <button style="border:none; background:none; color:#ccc; cursor:pointer;" onclick="deleteBucket(${item.id})">×</button>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        async function deleteBucket(id) {
+            appData.bucket = appData.bucket.filter(b => b.id !== id);
+            renderBucket();
+            await saveToCloud();
+        }
+
+        // 3. 小纸条逻辑
+        async function addNoteItem() {
+            const text = document.getElementById('new-note-content').value.trim();
+            if (!text) return;
+
+            if (!appData.notes) appData.notes = [];
+            appData.notes.unshift({ id: Date.now(), time: new Date().toLocaleDateString(), content: text });
+            document.getElementById('new-note-content').value = '';
+
+            renderNotes();
+            await saveToCloud();
+        }
+
+        function renderNotes() {
+            const container = document.getElementById('notes-container');
+            container.innerHTML = '';
+            const dict = i18n[currentLang];
+
+            if (!appData.notes || appData.notes.length === 0) {
+                container.innerHTML = `<p style="text-align:center; color:#aaa; font-size:0.9rem;">${dict.empty_text}</p>`;
+                return;
+            }
+
+            appData.notes.forEach(note => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.style.background = '#fffdfa';
+                card.style.borderColor = '#faedcd';
+                card.innerHTML = `
+                    <div class="card-header"><span>${note.time}</span></div>
+                    <div style="white-space: pre-wrap; font-size: 0.95rem; line-height: 1.4; color: #d4a373;">💛 ${note.content}</div>
                 `;
                 container.appendChild(card);
             });
