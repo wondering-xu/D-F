@@ -208,7 +208,7 @@
             font-size: 0.75rem;
             font-weight: bold;
         }
-        /* 强力修复：确保身份切换按钮绝对可见且醒目 */
+        /* 身份切换按钮 */
         .who-switch {
             display: inline-block !important;
             visibility: visible !important;
@@ -260,7 +260,6 @@
                 <div class="subtitle" id="days-counter">Recording our days</div>
             </div>
             <div class="header-right">
-                <!-- 身份切换按钮：点击可在 D 和 F 之间切换 -->
                 <button class="who-switch" id="who-btn" onclick="toggleWho()">Who: F</button>
                 <button class="action-btn" onclick="toggleLanguage()" id="lang-btn-text">中文</button>
             </div>
@@ -288,7 +287,7 @@
                 <div class="card" id="bucket-container"></div>
             </div>
 
-            <!-- 版块 3：做过的事情 (Memories / Done List) -->
+            <!-- 版块 3：做过的事情 (Memories / 也就是足迹) -->
             <div id="tab-memories" class="tab-content">
                 <div class="card">
                     <h3 style="margin-top:0; font-size:1rem; color:var(--primary-color);" data-i18n="memories_title">🌟 Things We've Done</h3>
@@ -311,26 +310,26 @@
 
         <!-- 底部导航切换栏 -->
         <nav class="bottom-nav">
-            <button class="nav-item active" onclick="switchTab('journal', this)">
+            <button class="nav-item active" onclick="switchTab('journal', this, 'nav-journal')">
                 <span>📖</span>
                 <span data-i18n="nav_journal">Journal</span>
             </button>
-            <button class="nav-item" onclick="switchTab('bucket', this)">
+            <button class="nav-item" onclick="switchTab('bucket', this, 'nav-bucket')">
                 <span>🎯</span>
                 <span data-i18n="nav_bucket">Bucket</span>
             </button>
-            <button class="nav-item" onclick="switchTab('memories', this)">
+            <button class="nav-item" id="nav-btn-memories" onclick="switchTab('memories', this, 'nav-memories')">
                 <span>🌟</span>
                 <span data-i18n="nav_memories">Memories</span>
             </button>
-            <button class="nav-item" onclick="switchTab('notes', this)">
+            <button class="nav-item" onclick="switchTab('notes', this, 'nav-notes')">
                 <span>💌</span>
                 <span data-i18n="nav_notes">Notes</span>
             </button>
         </nav>
     </div>
 
-     <script>
+   <script>
         // ================= 配置区域 =================
         const SECRET_PASS = "42924"; // 专属密码
         const LOVE_START_DATE = "2026-04-06"; // 你们在一起的纪念日
@@ -340,10 +339,8 @@
         const JSONBIN_BIN_ID = "6abdb802ac6210605a077b5f";
         // ============================================
 
-        // 当前选中的发件人身份 (F 或 D)
         let currentWho = localStorage.getItem('love_current_who') || 'F';
 
-        // 双语字典
         const i18n = {
             zh: {
                 lock_title: "🔒 我们的专属空间",
@@ -374,7 +371,8 @@
                 empty_text: "还没有记录，快写下第一条吧~",
                 days_prefix: "我们已经在一起第 ",
                 days_suffix: " 天啦 ❤️",
-                lang_switch: "EN"
+                lang_switch: "EN",
+                ask_to_memory: "太棒啦！要把这个愿望记录到「足迹」中吗？🌟"
             },
             en: {
                 lock_title: "🔒 Our Secret Space",
@@ -405,7 +403,8 @@
                 empty_text: "No records yet, write the first one~",
                 days_prefix: "We have been together for ",
                 days_suffix: " days ❤️",
-                lang_switch: "中文"
+                lang_switch: "中文",
+                ask_to_memory: "Awesome! Would you like to add this completed wish to your 'Memories'? 🌟"
             }
         };
 
@@ -470,7 +469,6 @@
             btnElement.classList.add('active');
         }
 
-        // 检查密码
         function checkPass() {
             const input = document.getElementById('pass-input').value;
             if (input === SECRET_PASS) {
@@ -492,7 +490,6 @@
             calcDays();
         }
 
-        // 计算在一起的天数
         function calcDays() {
             const start = new Date(LOVE_START_DATE);
             const today = new Date();
@@ -501,13 +498,11 @@
             document.getElementById('days-counter').innerText = `${dict.days_prefix}${Math.max(0, diff)}${dict.days_suffix}`;
         }
 
-        // 初始化应用
         async function initApp() {
             await fetchFromCloud();
             renderAll();
         }
 
-        // 从云端加载数据
         async function fetchFromCloud() {
             const dict = i18n[currentLang];
             if (JSONBIN_MASTER_KEY.includes("YOUR_MASTER")) {
@@ -540,7 +535,6 @@
             }
         }
 
-        // 保存数据到云端
         async function saveToCloud() {
             const dict = i18n[currentLang];
             localStorage.setItem('love_app_data', JSON.stringify(appData)); 
@@ -570,7 +564,6 @@
             renderNotes();
         }
 
-        // 生成身份标签 HTML
         function getBadgeHtml(who) {
             const w = who || 'F';
             const cls = w === 'D' ? 'badge-d' : 'badge-f';
@@ -631,12 +624,37 @@
             await saveToCloud();
         }
 
+        // 点击心愿完成：变为完成状态，并询问是否同步去足迹
         async function toggleBucket(id) {
             const item = appData.bucket.find(b => b.id === id);
-            if (item) {
-                item.completed = !item.completed;
-                renderBucket();
-                await saveToCloud();
+            if (!item) return;
+
+            item.completed = !item.completed;
+
+            // 如果刚刚变为已完成状态，询问是否同步到足迹
+            if (item.completed) {
+                const dict = i18n[currentLang];
+                if (confirm(dict.ask_to_memory)) {
+                    if (!appData.memories) appData.memories = [];
+                    appData.memories.unshift({
+                        id: Date.now(),
+                        who: currentWho,
+                        time: new Date().toLocaleDateString(),
+                        content: `完成了心愿：${item.text}`
+                    });
+                }
+            }
+
+            renderBucket();
+            renderMemories();
+            await saveToCloud();
+
+            // 如果刚加入了足迹，顺便自动跳转到足迹页面，给用户直观的反馈
+            if (item.completed) {
+                const memoriesTabBtn = document.getElementById('nav-btn-memories');
+                if (memoriesTabBtn) {
+                    switchTab('memories', memoriesTabBtn);
+                }
             }
         }
 
