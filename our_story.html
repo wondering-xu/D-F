@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -113,16 +113,18 @@
             color: #aaa;
             margin-bottom: 8px;
         }
-        textarea {
+        input[type="date"], textarea {
             width: 100%;
-            height: 80px;
             padding: 10px;
             border: 1px solid var(--border-color);
             border-radius: 6px;
-            resize: none;
             box-sizing: border-box;
             font-family: inherit;
             margin-bottom: 10px;
+        }
+        textarea {
+            height: 80px;
+            resize: none;
         }
         button.primary-btn {
             background: var(--primary-color);
@@ -155,13 +157,13 @@
 <body>
 
     <!-- 密码验证遮罩层 -->
-    <div id="lock-screen">
+    <div id="lock-screen" style="display: none;">
         <div class="lock-box">
-            <h3 data-i18n="lock_title">🔒 我们的专属空间</h3>
-            <p style="font-size: 0.85rem; color: #666;" data-i18n="lock_subtitle">请输入访问密码</p>
-            <input type="password" id="pass-input" placeholder="请输入密码">
+            <h3 data-i18n="lock_title">🔒 Our Secret Space</h3>
+            <p style="font-size: 0.85rem; color: #666;" data-i18n="lock_subtitle">Please enter passcode</p>
+            <input type="password" id="pass-input" placeholder="Passcode">
             <br>
-            <button onclick="checkPass()" data-i18n="lock_btn">进入</button>
+            <button onclick="checkPass()" data-i18n="lock_btn">Enter</button>
         </div>
     </div>
 
@@ -169,18 +171,19 @@
         <header>
             <div>
                 <h1 data-i18n="main_title">Our Sweet Journal</h1>
-                <div class="subtitle" id="days-counter">记录我们的每一天</div>
+                <div class="subtitle" id="days-counter">Recording our days</div>
             </div>
-            <button class="lang-btn" onclick="toggleLanguage()" id="lang-btn-text">EN</button>
+            <button class="lang-btn" onclick="toggleLanguage()" id="lang-btn-text">中文</button>
         </header>
 
         <div class="content-area">
-            <div class="sync-status" id="sync-status">状态: 准备就绪</div>
+            <div class="sync-status" id="sync-status">Status: Ready</div>
             
             <!-- 发布新内容区域 -->
             <div class="card">
-                <textarea id="new-post-content" data-i18n-ph="post_ph" placeholder="今天发生了什么甜蜜的事，写下来吧..."></textarea>
-                <button class="primary-btn" onclick="addNewPost()" data-i18n="post_btn">发布到云端同步</button>
+                <input type="date" id="new-post-date">
+                <textarea id="new-post-content" data-i18n-ph="post_ph" placeholder="What sweet thing happened today? Write it down..."></textarea>
+                <button class="primary-btn" onclick="addNewPost()" data-i18n="post_btn">Publish to Cloud</button>
             </div>
 
             <!-- 内容列表展示区 -->
@@ -190,17 +193,16 @@
         </div>
     </div>
 
-    <script>
+   <script>
         // ================= 配置区域 =================
         const SECRET_PASS = "42924"; // 你们的专属密码
         const LOVE_START_DATE = "2026-04-06"; // 在一起的纪念日
 
         // JsonBin.io 配置（换成你自己的 Key 和 Bin ID 即可实现双端同步）
         const JSONBIN_MASTER_KEY = "$2a$10$Hb.fuU6lxi7Nz83SOJDQou41uaW.bJ8ivHQXTn8aKB5KPd0QGXt12"; 
-        const JSONBIN_BIN_ID = "YOUR_BIN_ID_HERE";
+        const JSONBIN_BIN_ID = "6abdb802ac6210605a077b5f";
         // ============================================
 
-        // 双语字典
         const i18n = {
             zh: {
                 lock_title: "🔒 我们的专属空间",
@@ -240,7 +242,7 @@
             }
         };
 
-        let currentLang = localStorage.getItem('love_lang') || 'zh';
+        let currentLang = localStorage.getItem('love_lang') || 'en';
 
         function toggleLanguage() {
             currentLang = currentLang === 'zh' ? 'en' : 'zh';
@@ -264,7 +266,6 @@
             });
         }
 
-        // 检查密码
         function checkPass() {
             const input = document.getElementById('pass-input').value;
             if (input === SECRET_PASS) {
@@ -276,20 +277,30 @@
             }
         }
 
-        // 页面加载时检查是否验证过
+        // 页面加载检查（实现免密登录：如果之前验证过，直接进，不弹密码框）
         window.onload = function() {
             updateTexts();
+            
+            // 默认给日期输入框填入今天
+            document.getElementById('new-post-date').valueAsDate = new Date();
+
             if (localStorage.getItem('auth_passed') === 'true') {
                 document.getElementById('lock-screen').style.display = 'none';
                 initApp();
+            } else {
+                // 如果没验证过才显示密码框
+                document.getElementById('lock-screen').style.display = 'flex';
             }
             calcDays();
         }
 
-        // 计算在一起的天数
+        // 计算在一起的天数（基于 2026-04-06）
         function calcDays() {
             const start = new Date(LOVE_START_DATE);
             const today = new Date();
+            // 清除时间时分秒干扰，只算天数差
+            start.setHours(0,0,0,0);
+            today.setHours(0,0,0,0);
             const diff = Math.floor((today - start) / (1000 * 60 * 60 * 24));
             const dict = i18n[currentLang];
             document.getElementById('days-counter').innerText = `${dict.days_prefix}${Math.max(0, diff)}${dict.days_suffix}`;
@@ -297,17 +308,15 @@
 
         let posts = [];
 
-        // 初始化应用：从云端拉取数据
         async function initApp() {
             await fetchFromCloud();
             renderPosts();
         }
 
-        // 从云端加载数据
         async function fetchFromCloud() {
             const dict = i18n[currentLang];
             if (JSONBIN_MASTER_KEY.includes("YOUR_MASTER")) {
-                document.getElementById('sync-status').innerText = currentLang === 'zh' ? "提示: 尚未配置 JsonBin 密钥，当前为本地模式" : "Tip: JsonBin key not set, local mode";
+                document.getElementById('sync-status').innerText = currentLang === 'zh' ? "提示: 尚未配置云端，当前为本地模式" : "Tip: Local mode";
                 posts = JSON.parse(localStorage.getItem('local_posts') || '[]');
                 return;
             }
@@ -327,7 +336,6 @@
             }
         }
 
-        // 保存数据到云端
         async function saveToCloud() {
             const dict = i18n[currentLang];
             localStorage.setItem('local_posts', JSON.stringify(posts)); 
@@ -350,9 +358,10 @@
             }
         }
 
-        // 发布新内容
         async function addNewPost() {
+            const postDate = document.getElementById('new-post-date').value;
             const textContent = document.getElementById('new-post-content').value.trim();
+            
             if (!textContent) {
                 alert(currentLang === 'zh' ? '内容不能为空哦！' : 'Content cannot be empty!');
                 return;
@@ -360,7 +369,7 @@
 
             const newPost = {
                 id: Date.now(),
-                time: new Date().toLocaleString(),
+                time: postDate || new Date().toISOString().split('T')[0],
                 content: textContent
             };
 
@@ -371,7 +380,6 @@
             await saveToCloud();
         }
 
-        // 渲染页面列表
         function renderPosts() {
             const container = document.getElementById('posts-container');
             container.innerHTML = '';
@@ -387,7 +395,7 @@
                 card.className = 'card';
                 card.innerHTML = `
                     <div class="card-header">
-                        <span>${post.time}</span>
+                        <span style="font-weight: bold; color: var(--primary-color);">${post.time}</span>
                     </div>
                     <div style="white-space: pre-wrap; font-size: 0.95rem; line-height: 1.4;">${post.content}</div>
                 `;
