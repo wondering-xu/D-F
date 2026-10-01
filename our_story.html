@@ -31,11 +31,11 @@
             box-shadow: 0 0 20px rgba(0,0,0,0.05);
             display: flex;
             flex-direction: column;
-            padding-bottom: 70px; /* 留出底部导航空间 */
+            padding-bottom: 70px;
             box-sizing: border-box;
         }
         header {
-            padding: 20px;
+            padding: 15px 20px;
             text-align: center;
             border-bottom: 1px solid var(--border-color);
             background: #fff;
@@ -48,21 +48,26 @@
         }
         h1 {
             color: var(--primary-color);
-            margin: 0 0 5px 0;
-            font-size: 1.3rem;
+            margin: 0 0 3px 0;
+            font-size: 1.2rem;
             text-align: left;
         }
         .subtitle {
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             color: #888;
             text-align: left;
+        }
+        .header-right {
+            display: flex;
+            gap: 8px;
+            align-items: center;
         }
         .content-area {
             flex: 1;
             padding: 20px;
             overflow-y: auto;
         }
-        /* 底部导航栏（4个版块） */
+        /* 底部导航栏 */
         .bottom-nav {
             position: fixed;
             bottom: 0;
@@ -92,7 +97,6 @@
             color: var(--primary-color);
             font-weight: bold;
         }
-        /* 版块隐藏与显示 */
         .tab-content {
             display: none;
         }
@@ -136,7 +140,7 @@
             border-radius: 6px;
             cursor: pointer;
         }
-        /* 卡片与通用样式 */
+        /* 卡片样式 */
         .card {
             background: #fff;
             border: 1px solid var(--border-color);
@@ -148,10 +152,23 @@
         .card-header {
             display: flex;
             justify-content: space-between;
+            align-items: center;
             font-size: 0.8rem;
             color: #aaa;
             margin-bottom: 8px;
         }
+        /* 身份标徽样式 */
+        .badge {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            color: white;
+        }
+        .badge-d { background-color: #4a90e2; } /* D 的标志颜色：蓝色 */
+        .badge-f { background-color: #e27d60; } /* F 的标志颜色：暖橘色 */
+
         textarea, input[type="text"] {
             width: 100%;
             padding: 10px;
@@ -181,17 +198,28 @@
             color: #888;
             margin-bottom: 10px;
         }
-        .lang-btn {
+        .action-btn {
             background: #fdf2f0;
             border: 1px solid #f5c6cb;
             color: var(--primary-color);
+            padding: 5px 8px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+        /* 身份切换按钮 */
+        .who-switch {
+            background: #eef2f7;
+            border: 1px solid #cbd5e1;
+            color: #334155;
             padding: 5px 10px;
             border-radius: 6px;
             cursor: pointer;
             font-size: 0.8rem;
             font-weight: bold;
         }
-        /* 心愿单样式：完成时颜色变淡并加删除线 */
+        /* 心愿单样式 */
         .bucket-item {
             display: flex;
             align-items: center;
@@ -228,7 +256,11 @@
                 <h1 data-i18n="main_title">Our Sweet Journal</h1>
                 <div class="subtitle" id="days-counter">Recording our days</div>
             </div>
-            <button class="lang-btn" onclick="toggleLanguage()" id="lang-btn-text">中文</button>
+            <div class="header-right">
+                <!-- 身份切换按钮：点击可在 D 和 F 之间切换 -->
+                <button class="who-switch" id="who-btn" onclick="toggleWho()">Who: F</button>
+                <button class="action-btn" onclick="toggleLanguage()" id="lang-btn-text">中文</button>
+            </div>
         </header>
 
         <div class="content-area">
@@ -274,7 +306,7 @@
             </div>
         </div>
 
-        <!-- 底部导航切换栏（4个按钮） -->
+        <!-- 底部导航切换栏 -->
         <nav class="bottom-nav">
             <button class="nav-item active" onclick="switchTab('journal', this)">
                 <span>📖</span>
@@ -295,7 +327,7 @@
         </nav>
     </div>
 
-    <script>
+     <script>
         // ================= 配置区域 =================
         const SECRET_PASS = "42924"; // 专属密码
         const LOVE_START_DATE = "2026-04-06"; // 你们在一起的纪念日
@@ -305,7 +337,10 @@
         const JSONBIN_BIN_ID = "6abdb802ac6210605a077b5f";
         // ============================================
 
-        // 双语字典（默认英文）
+        // 当前选中的发件人身份 (F 或 D)
+        let currentWho = localStorage.getItem('love_current_who') || 'F';
+
+        // 双语字典
         const i18n = {
             zh: {
                 lock_title: "🔒 我们的专属空间",
@@ -387,6 +422,26 @@
             renderAll();
         }
 
+        function toggleWho() {
+            currentWho = currentWho === 'F' ? 'D' : 'F';
+            localStorage.setItem('love_current_who', currentWho);
+            updateWhoButton();
+        }
+
+        function updateWhoButton() {
+            const btn = document.getElementById('who-btn');
+            btn.innerText = `Who: ${currentWho}`;
+            if (currentWho === 'D') {
+                btn.style.background = '#e0f2fe';
+                btn.style.color = '#0369a1';
+                btn.style.borderColor = '#bae6fd';
+            } else {
+                btn.style.background = '#fdf2f0';
+                btn.style.color = '#e27d60';
+                btn.style.borderColor = '#f5c6cb';
+            }
+        }
+
         function updateTexts() {
             const dict = i18n[currentLang];
             document.getElementById('lang-btn-text').innerText = dict.lang_switch;
@@ -425,6 +480,7 @@
 
         window.onload = function() {
             updateTexts();
+            updateWhoButton();
             if (localStorage.getItem('auth_passed') === 'true') {
                 document.getElementById('lock-screen').style.display = 'none';
                 initApp();
@@ -432,7 +488,7 @@
             calcDays();
         }
 
-        // 计算在一起的天数（以 2026-04-06 为准）
+        // 计算在一起的天数
         function calcDays() {
             const start = new Date(LOVE_START_DATE);
             const today = new Date();
@@ -463,7 +519,6 @@
                 });
                 const data = await response.json();
                 appData = data.record || { posts: [], bucket: [], memories: [], notes: [] };
-                // 兼容旧数据结构
                 if (!appData.memories) appData.memories = [];
                 document.getElementById('sync-status').innerText = dict.sync_success;
             } catch (error) {
@@ -504,12 +559,18 @@
             }
         }
 
-        // 渲染所有版块
         function renderAll() {
             renderPosts();
             renderBucket();
             renderMemories();
             renderNotes();
+        }
+
+        // 生成身份标签 HTML
+        function getBadgeHtml(who) {
+            const w = who || 'F';
+            const cls = w === 'D' ? 'badge-d' : 'badge-f';
+            return `<span class="badge ${cls}">${w}</span>`;
         }
 
         // 1. 发布日记
@@ -519,6 +580,7 @@
 
             appData.posts.unshift({
                 id: Date.now(),
+                who: currentWho,
                 time: new Date().toLocaleString(),
                 content: textContent
             });
@@ -542,20 +604,23 @@
                 const card = document.createElement('div');
                 card.className = 'card';
                 card.innerHTML = `
-                    <div class="card-header"><span>${post.time}</span></div>
+                    <div class="card-header">
+                        <span>${post.time}</span>
+                        ${getBadgeHtml(post.who)}
+                    </div>
                     <div style="white-space: pre-wrap; font-size: 0.95rem; line-height: 1.4;">${post.content}</div>
                 `;
                 container.appendChild(card);
             });
         }
 
-        // 2. 心愿单逻辑（支持做完变淡）
+        // 2. 心愿单
         async function addBucketItem() {
             const text = document.getElementById('new-bucket-input').value.trim();
             if (!text) return;
 
             if (!appData.bucket) appData.bucket = [];
-            appData.bucket.unshift({ id: Date.now(), text: text, completed: false });
+            appData.bucket.unshift({ id: Date.now(), who: currentWho, text: text, completed: false });
             document.getElementById('new-bucket-input').value = '';
 
             renderBucket();
@@ -585,8 +650,14 @@
                 const div = document.createElement('div');
                 div.className = `bucket-item ${item.completed ? 'completed' : ''}`;
                 div.innerHTML = `
-                    <span style="font-size:0.95rem; cursor:pointer;" onclick="toggleBucket(${item.id})">${item.completed ? '✅' : '⏳'} ${item.text}</span>
-                    <button style="border:none; background:none; color:#ccc; cursor:pointer;" onclick="deleteBucket(${item.id})">×</button>
+                    <div style="display:flex; align-items:center; gap:8px; flex:1; cursor:pointer;" onclick="toggleBucket(${item.id})">
+                        <span>${item.completed ? '✅' : '⏳'}</span>
+                        <span style="font-size:0.95rem;">${item.text}</span>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        ${getBadgeHtml(item.who)}
+                        <button style="border:none; background:none; color:#ccc; cursor:pointer;" onclick="deleteBucket(${item.id})">×</button>
+                    </div>
                 `;
                 container.appendChild(div);
             });
@@ -598,7 +669,7 @@
             await saveToCloud();
         }
 
-        // 3. “做过的事情”逻辑 (Memories)
+        // 3. 做过的事情 (Memories)
         async function addMemoryItem() {
             const text = document.getElementById('new-memory-content').value.trim();
             if (!text) return;
@@ -606,6 +677,7 @@
             if (!appData.memories) appData.memories = [];
             appData.memories.unshift({
                 id: Date.now(),
+                who: currentWho,
                 time: new Date().toLocaleDateString(),
                 content: text
             });
@@ -631,20 +703,28 @@
                 card.style.background = '#f4fbf7';
                 card.style.borderColor = '#d8f3e5';
                 card.innerHTML = `
-                    <div class="card-header"><span>${memory.time}</span></div>
+                    <div class="card-header">
+                        <span>${memory.time}</span>
+                        ${getBadgeHtml(memory.who)}
+                    </div>
                     <div style="white-space: pre-wrap; font-size: 0.95rem; line-height: 1.4; color: #2d6a4f;">🌟 ${memory.content}</div>
                 `;
                 container.appendChild(card);
             });
         }
 
-        // 4. 小纸条逻辑
+        // 4. 小纸条
         async function addNoteItem() {
             const text = document.getElementById('new-note-content').value.trim();
             if (!text) return;
 
             if (!appData.notes) appData.notes = [];
-            appData.notes.unshift({ id: Date.now(), time: new Date().toLocaleDateString(), content: text });
+            appData.notes.unshift({ 
+                id: Date.now(), 
+                who: currentWho, 
+                time: new Date().toLocaleDateString(), 
+                content: text 
+            });
             document.getElementById('new-note-content').value = '';
 
             renderNotes();
@@ -667,7 +747,10 @@
                 card.style.background = '#fffdfa';
                 card.style.borderColor = '#faedcd';
                 card.innerHTML = `
-                    <div class="card-header"><span>${note.time}</span></div>
+                    <div class="card-header">
+                        <span>${note.time}</span>
+                        ${getBadgeHtml(note.who)}
+                    </div>
                     <div style="white-space: pre-wrap; font-size: 0.95rem; line-height: 1.4; color: #d4a373;">💛 ${note.content}</div>
                 `;
                 container.appendChild(card);
