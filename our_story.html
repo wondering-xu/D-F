@@ -62,7 +62,7 @@
             padding: 20px;
             overflow-y: auto;
         }
-        /* 底部导航栏 */
+        /* 底部导航栏（4个版块） */
         .bottom-nav {
             position: fixed;
             bottom: 0;
@@ -81,7 +81,7 @@
             background: none;
             border: none;
             color: #888;
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             cursor: pointer;
             display: flex;
             flex-direction: column;
@@ -191,17 +191,21 @@
             font-size: 0.8rem;
             font-weight: bold;
         }
-        /* 心愿单样式 */
+        /* 心愿单样式：完成时颜色变淡并加删除线 */
         .bucket-item {
             display: flex;
             align-items: center;
             justify-content: space-between;
             padding: 8px 0;
             border-bottom: 1px dashed var(--border-color);
+            transition: all 0.2s ease;
         }
         .bucket-item.completed span {
             text-decoration: line-through;
-            color: #aaa;
+            color: #ccc !important;
+        }
+        .bucket-item.completed {
+            opacity: 0.5;
         }
     </style>
 </head>
@@ -249,7 +253,17 @@
                 <div class="card" id="bucket-container"></div>
             </div>
 
-            <!-- 版块 3：纪念小纸条/留言板 (Notes) -->
+            <!-- 版块 3：做过的事情 (Memories / Done List) -->
+            <div id="tab-memories" class="tab-content">
+                <div class="card">
+                    <h3 style="margin-top:0; font-size:1rem; color:var(--primary-color);" data-i18n="memories_title">🌟 Things We've Done</h3>
+                    <textarea id="new-memory-content" data-i18n-ph="memories_ph" placeholder="Record a wonderful thing we have accomplished together..."></textarea>
+                    <button class="primary-btn" onclick="addMemoryItem()" data-i18n="memories_btn">Add Memory</button>
+                </div>
+                <div id="memories-container"></div>
+            </div>
+
+            <!-- 版块 4：纪念小纸条 (Notes) -->
             <div id="tab-notes" class="tab-content">
                 <div class="card">
                     <h3 style="margin-top:0; font-size:1rem; color:var(--primary-color);" data-i18n="notes_title">💌 Sweet Notes</h3>
@@ -260,7 +274,7 @@
             </div>
         </div>
 
-        <!-- 底部导航切换栏 -->
+        <!-- 底部导航切换栏（4个按钮） -->
         <nav class="bottom-nav">
             <button class="nav-item active" onclick="switchTab('journal', this)">
                 <span>📖</span>
@@ -268,7 +282,11 @@
             </button>
             <button class="nav-item" onclick="switchTab('bucket', this)">
                 <span>🎯</span>
-                <span data-i18n="nav_bucket">Bucket List</span>
+                <span data-i18n="nav_bucket">Bucket</span>
+            </button>
+            <button class="nav-item" onclick="switchTab('memories', this)">
+                <span>🌟</span>
+                <span data-i18n="nav_memories">Memories</span>
             </button>
             <button class="nav-item" onclick="switchTab('notes', this)">
                 <span>💌</span>
@@ -279,10 +297,10 @@
 
     <script>
         // ================= 配置区域 =================
-        const SECRET_PASS = "42924"; // 你们的专属密码
-        const LOVE_START_DATE = "2026-04-06"; // 在一起的纪念日
+        const SECRET_PASS = "42924"; // 专属密码
+        const LOVE_START_DATE = "2026-04-06"; // 你们在一起的纪念日
 
-        // JsonBin.io 配置（换成你自己的 Key 和 Bin ID 即可实现双端同步）
+        // JsonBin.io 配置（双端同步）
         const JSONBIN_MASTER_KEY = "$2a$10$Hb.fuU6lxi7Nz83SOJDQou41uaW.bJ8ivHQXTn8aKB5KPd0QGXt12"; 
         const JSONBIN_BIN_ID = "6abdb802ac6210605a077b5f";
         // ============================================
@@ -299,11 +317,15 @@
                 bucket_title: "✨ 我们的愿望清单",
                 bucket_ph: "添加一个以后想一起完成的愿望...",
                 bucket_btn: "添加愿望",
+                memories_title: "🌟 我们做过的事情",
+                memories_ph: "记录一件我们一起完成的精彩回忆...",
+                memories_btn: "添加回忆",
                 notes_title: "💌 浪漫小纸条",
                 notes_ph: "给对方留下一句话吧...",
                 notes_btn: "发送纸条",
                 nav_journal: "日记",
                 nav_bucket: "心愿",
+                nav_memories: "足迹",
                 nav_notes: "纸条",
                 sync_ready: "状态: 准备就绪",
                 sync_loading: "正在从云端同步...",
@@ -326,11 +348,15 @@
                 bucket_title: "✨ Our Bucket List",
                 bucket_ph: "Add a new dream to do together...",
                 bucket_btn: "Add Wish",
+                memories_title: "🌟 Things We've Done",
+                memories_ph: "Record a wonderful thing we have accomplished together...",
+                memories_btn: "Add Memory",
                 notes_title: "💌 Sweet Notes",
                 notes_ph: "Leave a romantic note for each other...",
                 notes_btn: "Leave Note",
                 nav_journal: "Journal",
-                nav_bucket: "Bucket List",
+                nav_bucket: "Bucket",
+                nav_memories: "Memories",
                 nav_notes: "Notes",
                 sync_ready: "Status: Ready",
                 sync_loading: "Syncing from cloud...",
@@ -349,6 +375,7 @@
         let appData = {
             posts: [],
             bucket: [],
+            memories: [],
             notes: []
         };
 
@@ -435,7 +462,9 @@
                     headers: { 'X-Master-Key': JSONBIN_MASTER_KEY }
                 });
                 const data = await response.json();
-                appData = data.record || { posts: [], bucket: [], notes: [] };
+                appData = data.record || { posts: [], bucket: [], memories: [], notes: [] };
+                // 兼容旧数据结构
+                if (!appData.memories) appData.memories = [];
                 document.getElementById('sync-status').innerText = dict.sync_success;
             } catch (error) {
                 console.error("同步失败", error);
@@ -448,6 +477,7 @@
             const local = localStorage.getItem('love_app_data');
             if (local) {
                 appData = JSON.parse(local);
+                if (!appData.memories) appData.memories = [];
             }
         }
 
@@ -478,6 +508,7 @@
         function renderAll() {
             renderPosts();
             renderBucket();
+            renderMemories();
             renderNotes();
         }
 
@@ -518,7 +549,7 @@
             });
         }
 
-        // 2. 心愿单逻辑
+        // 2. 心愿单逻辑（支持做完变淡）
         async function addBucketItem() {
             const text = document.getElementById('new-bucket-input').value.trim();
             if (!text) return;
@@ -567,7 +598,47 @@
             await saveToCloud();
         }
 
-        // 3. 小纸条逻辑
+        // 3. “做过的事情”逻辑 (Memories)
+        async function addMemoryItem() {
+            const text = document.getElementById('new-memory-content').value.trim();
+            if (!text) return;
+
+            if (!appData.memories) appData.memories = [];
+            appData.memories.unshift({
+                id: Date.now(),
+                time: new Date().toLocaleDateString(),
+                content: text
+            });
+            document.getElementById('new-memory-content').value = '';
+
+            renderMemories();
+            await saveToCloud();
+        }
+
+        function renderMemories() {
+            const container = document.getElementById('memories-container');
+            container.innerHTML = '';
+            const dict = i18n[currentLang];
+
+            if (!appData.memories || appData.memories.length === 0) {
+                container.innerHTML = `<p style="text-align:center; color:#aaa; font-size:0.9rem;">${dict.empty_text}</p>`;
+                return;
+            }
+
+            appData.memories.forEach(memory => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.style.background = '#f4fbf7';
+                card.style.borderColor = '#d8f3e5';
+                card.innerHTML = `
+                    <div class="card-header"><span>${memory.time}</span></div>
+                    <div style="white-space: pre-wrap; font-size: 0.95rem; line-height: 1.4; color: #2d6a4f;">🌟 ${memory.content}</div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // 4. 小纸条逻辑
         async function addNoteItem() {
             const text = document.getElementById('new-note-content').value.trim();
             if (!text) return;
