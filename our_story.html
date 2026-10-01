@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Our Sweet Story 💍</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@450;600&family=Inter:wght@300;400;500;600&display=swap');
+        body { font-family: 'Inter', 'Noto Serif SC', serif; }
+    </style>
+</head>
+<body class="bg-rose-50/50 text-slate-800 min-h-screen flex flex-col">
+
+    <!-- ================= 1. 密码保护遮罩层 ================= -->
+    <div id="lock-screen" class="fixed inset-0 bg-rose-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl text-center space-y-6 border border-rose-100">
+            <div class="w-16 h-16 bg-rose-100 text-rose-500 rounded-full flex items-center justify-center mx-auto text-2xl shadow-inner">
+                💌
+            </div>
+            <div>
+                <h2 class="text-xl font-bold text-slate-800" data-i18n="lock_title">Our Secret Space</h2>
+                <p class="text-xs text-slate-400 mt-1" data-i18n="lock_subtitle">请输入专属暗号（纪念日数字）解锁</p>
+            </div>
+            <form onsubmit="unlockSpace(event)" class="space-y-3">
+                <input type="password" id="passcode-input" placeholder="例如：MMDD" required 
+                       class="w-full text-center tracking-widest bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-lg focus:outline-none focus:ring-2 focus:ring-rose-400">
+                <button type="submit" class="w-full bg-rose-500 hover:bg-rose-600 text-white font-semibold py-3 rounded-xl transition shadow-md shadow-rose-200" data-i18n="lock_btn">
+                    开启我们的故事
+                </button>
+            </form>
+            <p id="error-tip" class="text-xs text-rose-500 hidden" data-i18n="lock_error">密码不对哦，再试一次~</p>
+        </div>
+    </div>
+
+    <!-- ================= 2. 主体内容（解锁后可见） ================= -->
+    <div id="main-content" class="flex-1 flex flex-col hidden">
+
+        <!-- Header / Banner -->
+        <header class="bg-white border-b border-rose-100 py-6 px-6 shadow-sm">
+            <div class="max-w-2xl mx-auto flex justify-between items-center">
+                <div>
+                    <h1 class="text-xl font-bold text-rose-600 flex items-center gap-2">
+                        ✨ <span data-i18n="main_title">我们的专属恋爱手帐</span>
+                    </h1>
+                    <p class="text-xs text-slate-400 mt-0.5" data-i18n="main_subtitle">记录属于我们每一个闪闪发光的日子</p>
+                </div>
+                <div class="flex items-center gap-4">
+                    <div class="text-right">
+                        <div class="text-xs text-rose-400 font-semibold" data-i18n="love_label">恋爱中</div>
+                        <div class="text-sm font-bold text-slate-700"><span id="love-days">--</span> <span data-i18n="days_unit">天</span></div>
+                    </div>
+                    <!-- Language Toggle Button -->
+                    <button onclick="toggleLanguage()" class="bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs px-2.5 py-1.5 rounded-lg border border-rose-200 transition font-medium">
+                        <span id="lang-btn-text">EN</span>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Navigation Tabs -->
+        <nav class="max-w-2xl w-full mx-auto px-4 mt-6">
+            <div class="flex bg-rose-100/60 p-1.5 rounded-2xl text-sm font-medium gap-1 text-slate-600">
+                <button onclick="switchTab('timeline')" id="btn-timeline" class="flex-1 py-2.5 rounded-xl bg-white text-rose-600 shadow-sm transition" data-i18n="tab_timeline">⏳ 时间轴</button>
+                <button onclick="switchTab('bucket')" id="btn-bucket" class="flex-1 py-2.5 rounded-xl transition" data-i18n="tab_bucket">🎯 心愿清单</button>
+                <button onclick="switchTab('notes')" id="btn-notes" class="flex-1 py-2.5 rounded-xl transition" data-i18n="tab_notes">📝 碎碎念</button>
+            </div>
+        </nav>
+
+        <!-- Main Content Container -->
+        <main class="max-w-2xl w-full mx-auto p-4 flex-1 space-y-6 mb-12">
+
+            <!-- Tab 1: Timeline (时间轴) -->
+            <div id="tab-timeline" class="space-y-4">
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-rose-100 space-y-3">
+                    <h3 class="text-sm font-bold text-rose-500" data-i18n="t_box_title">✨ 记录新的高光时刻</h3>
+                    <form onsubmit="addTimelineItem(event)" class="space-y-3">
+                        <input type="date" id="t-date" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-400">
+                        <input type="text" id="t-title" data-i18n-placeholder="t_title_ph" placeholder="事件标题 (例如：第一次一起去海边)" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-400">
+                        <textarea id="t-desc" rows="2" data-i18n-placeholder="t_desc_ph" placeholder="当时的心情或小故事..." class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-400"></textarea>
+                        <button type="submit" class="w-full bg-rose-500 hover:bg-rose-600 text-white font-semibold py-2 rounded-xl text-sm transition" data-i18n="t_btn">添加回忆</button>
+                    </form>
+                </div>
+
+                <div id="timeline-list" class="space-y-3">
+                    <!-- Dynamic Timeline -->
+                </div>
+            </div>
+
+            <!-- Tab 2: Bucket List (心愿清单) -->
+            <div id="tab-bucket" class="space-y-4 hidden">
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-rose-100 space-y-3">
+                    <h3 class="text-sm font-bold text-rose-500" data-i18n="b_box_title">🎯 我们想一起做的事</h3>
+                    <form onsubmit="addBucketItem(event)" class="flex gap-2">
+                        <input type="text" id="b-text" data-i18n-placeholder="b_text_ph" placeholder="输入愿望 (例如：一起学做某道菜)..." required class="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-400">
+                        <button type="submit" class="bg-rose-500 hover:bg-rose-600 text-white px-4 py-2 rounded-xl text-sm transition" data-i18n="b_btn">添加</button>
+                    </form>
+                </div>
+
+                <div id="bucket-list" class="space-y-2">
+                    <!-- Dynamic Bucket List -->
+                </div>
+            </div>
+
+            <!-- Tab 3: Daily Notes (碎碎念) -->
+            <div id="tab-notes" class="space-y-4 hidden">
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-rose-100 space-y-3">
+                    <h3 class="text-sm font-bold text-rose-500" data-i18n="n_box_title">💌 今日小情话 / 碎碎念</h3>
+                    <form onsubmit="addNoteItem(event)" class="space-y-3">
+                        <textarea id="n-content" rows="3" data-i18n-placeholder="n_content_ph" placeholder="今天发生了什么好玩的事，或者想对Ta说的话..." required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-400"></textarea>
+                        <button type="submit" class="w-full bg-rose-500 hover:bg-rose-600 text-white font-semibold py-2 rounded-xl text-sm transition" data-i18n="n_btn">发送悄悄话</button>
+                    </form>
+                </div>
+
+                <div id="notes-list" class="space-y-3">
+                    <!-- Dynamic Notes -->
+                </div>
+            </div>
+
+        </main>
+
+        <!-- Footer -->
+        <footer class="text-center py-4 text-xs text-slate-400 border-t border-rose-100 mt-auto" data-i18n="footer">
+            Made with love, exclusively for two of us. ❤️
+        </footer>
+
+    </div>
+
+    <!-- JavaScript Logic & Bilingual Dictionary -->
+    <script>
+        // 🔒 设置你们的专属解锁密码
+        const SECRET_PASS = "5201314"; 
+        // ⏳ 设置你们恋爱开始的纪念日
+        const LOVE_START_DATE = "2026-01-01"; 
+
+        // 语言字典
+        const i18n = {
+            zh: {
+                lock_title: "Our Secret Space",
+                lock_subtitle: "请输入专属暗号（纪念日数字）解锁",
+                lock_btn: "开启我们的故事",
+                lock_error: "密码不对哦，再试一次~",
+                main_title: "我们的专属恋爱手帐",
+                main_subtitle: "记录属于我们每一个闪闪发光的日子",
+                love_label: "恋爱中",
+                days_unit: "天",
+                tab_timeline: "⏳ 时间轴",
+                tab_bucket: "🎯 心愿清单",
+                tab_notes: "📝 碎碎念",
+                t_box_title: "✨ 记录新的高光时刻",
+                t_title_ph: "事件标题 (例如：第一次一起去海边)",
+                t_desc_ph: "当时的心情或小故事...",
+                t_btn: "添加回忆",
+                b_box_title: "🎯 我们想一起做的事",
+                b_text_ph: "输入愿望 (例如：一起学做某道菜)...",
+                b_btn: "添加",
+                n_box_title: "💌 今日小情话 / 碎碎念",
+                n_content_ph: "今天发生了什么好玩的事，或者想对Ta说的话...",
+                n_btn: "发送悄悄话",
+                footer: "Made with love, exclusively for two of us. ❤️",
+                lang_btn: "EN"
+            },
+            en: {
+                lock_title: "Our Secret Space",
+                lock_subtitle: "Enter passcode (anniversary digits) to unlock",
+                lock_btn: "Open Our Story",
+                lock_error: "Incorrect passcode, try again~",
+                main_title: "Our Sweet Love Journal",
+                main_subtitle: "Recording every glowing day of us",
+                love_label: "In Love",
+                days_unit: "Days",
+                tab_timeline: "⏳ Timeline",
+                tab_bucket: "🎯 Bucket List",
+                tab_notes: "📝 Notes",
+                t_box_title: "✨ Record a New Milestone",
+                t_title_ph: "Title (e.g., First trip to the beach)",
+                t_desc_ph: "Feelings or short story...",
+                t_btn: "Add Memory",
+                b_box_title: "🎯 Things To Do Together",
+                b_text_ph: "Enter a wish (e.g., Cook dinner together)...",
+                b_btn: "Add",
+                n_box_title: "💌 Daily Sweet Notes",
+                n_content_ph: "What happened today, or something to say to Ta...",
+                n_btn: "Send Note",
+                footer: "Made with love, exclusively for two of us. ❤️",
+                lang_btn: "中文"
+            }
+        };
+
+        let currentLang = localStorage.getItem('love_lang') || 'zh';
+
+        function toggleLanguage() {
+            currentLang = currentLang === 'zh' ? 'en' : 'zh';
+            localStorage.setItem('love_lang', currentLang);
+            updateTexts();
+        }
+
+        function updateTexts() {
+            const dict = i18n[currentLang];
+            document.getElementById('lang-btn-text').innerText = currentLang === 'zh' ? 'EN' : '中文';
+            
+            // 更新所有带 data-i18n 属性的标签
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (dict[key]) el.innerText = dict[key];
+            });
+
+            // 更新所有带 placeholder 的输入框
+            document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+                const key = el.getAttribute('data-i18n-placeholder');
+                if (dict[key]) el.placeholder = dict[key];
+            });
+        }
+
+        function unlockSpace(e) {
+            e.preventDefault();
+            const val = document.getElementById('passcode-input').value;
+            if (val === SECRET_PASS) {
+                document.getElementById('lock-screen').classList.add('hidden');
+                document.getElementById('main-content').classList.remove('hidden');
+                initApp();
+            } else {
+                const tip = document.getElementById('error-tip');
+                tip.classList.remove('hidden');
+            }
+        }
+
+        // Calculate Days
+        function calculateLoveDays() {
+            const start = new Date(LOVE_START_DATE);
+            const now = new Date();
+            const diff = Math.floor((now - start) / (1000 * 60 * 60 * 24));
+            document.getElementById('love-days').innerText = Math.max(0, diff);
+        }
+
+        // Tab Switching
+        function switchTab(tab) {
+            ['timeline', 'bucket', 'notes'].forEach(t => {
+                document.getElementById(`tab-${t}`).classList.add('hidden');
+                document.getElementById(`btn-${t}`).className = "flex-1 py-2.5 rounded-xl transition text-slate-600";
+            });
+            document.getElementById(`tab-${tab}`).classList.remove('hidden');
+            document.getElementById(`btn-${tab}`).className = "flex-1 py-2.5 rounded-xl bg-white text-rose-600 shadow-sm transition font-bold";
+        }
+
+        // Data Stores
+        let timelineData = JSON.parse(localStorage.getItem('love_timeline')) || [
+            { date: "2026-01-01", title: "确立关系 🎉 / Official Relationship", desc: "属于我们两个人的故事正式开始。" }
+        ];
+        let bucketData = JSON.parse(localStorage.getItem('love_bucket')) || [
+            { text: "一起去墨尔本看海 🌊 / See the ocean in Melbourne", done: false },
+            { text: "一起做一顿丰盛的烛光晚餐 🍷 / Candlelight dinner", done: true }
+        ];
+        let notesData = JSON.parse(localStorage.getItem('love_notes')) || [
+            { date: "2026-10-01", content: "今天也是超级喜欢你的一天！" }
+        ];
+
+        function initApp() {
+            updateTexts();
+            calculateLoveDays();
+            renderTimeline();
+            renderBucket();
+            renderNotes();
+            document.getElementById('t-date').valueAsDate = new Date();
+        }
+
+        // Timeline Functions
+        function addTimelineItem(e) {
+            e.preventDefault();
+            const date = document.getElementById('t-date').value;
+            const title = document.getElementById('t-title').value;
+            const desc = document.getElementById('t-desc').value;
+            timelineData.unshift({ date, title, desc });
+            localStorage.setItem('love_timeline', JSON.stringify(timelineData));
+            e.target.reset();
+            document.getElementById('t-date').valueAsDate = new Date();
+            renderTimeline();
+        }
+
+        function renderTimeline() {
+            const el = document.getElementById('timeline-list');
+            el.innerHTML = timelineData.map((item, idx) => `
+                <div class="bg-white p-4 rounded-2xl shadow-sm border border-rose-100 relative pl-6 border-l-4 border-l-rose-400">
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs text-rose-500 font-mono font-semibold">${item.date}</span>
+                        <button onclick="deleteTimeline(${idx})" class="text-slate-300 hover:text-red-400 text-xs">✕</button>
+                    </div>
+                    <h4 class="font-bold text-slate-800 text-base mt-1">${item.title}</h4>
+                    <p class="text-sm text-slate-600 mt-1">${item.desc}</p>
+                </div>
+            `).join('');
+        }
+
+        function deleteTimeline(idx) {
+            timelineData.splice(idx, 1);
+            localStorage.setItem('love_timeline', JSON.stringify(timelineData));
+            renderTimeline();
+        }
+
+        // Bucket Functions
+        function addBucketItem(e) {
+            e.preventDefault();
+            const text = document.getElementById('b-text').value;
+            bucketData.unshift({ text, done: false });
+            localStorage.setItem('love_bucket', JSON.stringify(bucketData));
+            e.target.reset();
+            renderBucket();
+        }
+
+        function toggleBucket(idx) {
+            bucketData[idx].done = !bucketData[idx].done;
+            localStorage.setItem('love_bucket', JSON.stringify(bucketData));
+            renderBucket();
+        }
+
+        function deleteBucket(idx) {
+            bucketData.splice(idx, 1);
+            localStorage.setItem('love_bucket', JSON.stringify(bucketData));
+            renderBucket();
+        }
+
+        function renderBucket() {
+            const el = document.getElementById('bucket-list');
+            el.innerHTML = bucketData.map((item, idx) => `
+                <div class="bg-white p-3.5 rounded-xl shadow-sm border border-rose-100 flex items-center justify-between">
+                    <label class="flex items-center gap-3 cursor-pointer flex-1">
+                        <input type="checkbox" ${item.done ? 'checked' : ''} onchange="toggleBucket(${idx})" class="w-4 h-4 text-rose-500 rounded border-slate-300 focus:ring-rose-400">
+                        <span class="text-sm ${item.done ? 'line-through text-slate-400' : 'text-slate-700 font-medium'}">${item.text}</span>
+                    </label>
+                    <button onclick="deleteBucket(${idx})" class="text-slate-300 hover:text-red-400 text-xs px-2">✕</button>
+                </div>
+            `).join('');
+        }
+
+        // Notes Functions
+        function addNoteItem(e) {
+            e.preventDefault();
+            const content = document.getElementById('n-content').value;
+            const date = new Date().toISOString().split('T')[0];
+            notesData.unshift({ date, content });
+            localStorage.setItem('love_notes', JSON.stringify(notesData));
+            e.target.reset();
+            renderNotes();
+        }
+
+        function deleteNote(idx) {
+            notesData.splice(idx, 1);
+            localStorage.setItem('love_notes', JSON.stringify(notesData));
+            renderNotes();
+        }
+
+        function renderNotes() {
+            const el = document.getElementById('notes-list');
+            el.innerHTML = notesData.map((item, idx) => `
+                <div class="bg-white p-4 rounded-2xl shadow-sm border border-rose-100">
+                    <div class="flex justify-between items-center text-xs text-rose-400 font-mono mb-1">
+                        <span>${item.date}</span>
+                        <button onclick="deleteNote(${idx})" class="text-slate-300 hover:text-red-400">✕</button>
+                    </div>
+                    <p class="text-sm text-slate-700 leading-relaxed">${item.content}</p>
+                </div>
+            `).join('');
+        }
+    </script>
+</body>
+</html>
