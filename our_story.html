@@ -160,14 +160,14 @@
         /* 身份标徽样式 */
         .badge {
             display: inline-block;
-            padding: 2px 6px;
+            padding: 2px 8px;
             border-radius: 4px;
             font-size: 0.75rem;
             font-weight: bold;
             color: white;
         }
-        .badge-d { background-color: #4a90e2; } /* D 的标志颜色：蓝色 */
-        .badge-f { background-color: #e27d60; } /* F 的标志颜色：暖橘色 */
+        .badge-d { background-color: #3b82f6; } /* D：蓝色 */
+        .badge-f { background-color: #f97316; } /* F：橘色 */
 
         textarea, input[type="text"] {
             width: 100%;
@@ -202,22 +202,25 @@
             background: #fdf2f0;
             border: 1px solid #f5c6cb;
             color: var(--primary-color);
-            padding: 5px 8px;
+            padding: 6px 10px;
             border-radius: 6px;
             cursor: pointer;
             font-size: 0.75rem;
             font-weight: bold;
         }
-        /* 身份切换按钮 */
+        /* 强力修复：确保身份切换按钮绝对可见且醒目 */
         .who-switch {
-            background: #eef2f7;
-            border: 1px solid #cbd5e1;
-            color: #334155;
-            padding: 5px 10px;
+            display: inline-block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            padding: 6px 12px;
             border-radius: 6px;
             cursor: pointer;
-            font-size: 0.8rem;
+            font-size: 0.85rem;
             font-weight: bold;
+            border: 1px solid #cbd5e1;
+            background: #f8fafc;
+            color: #334155;
         }
         /* 心愿单样式 */
         .bucket-item {
@@ -430,15 +433,16 @@
 
         function updateWhoButton() {
             const btn = document.getElementById('who-btn');
+            if (!btn) return;
             btn.innerText = `Who: ${currentWho}`;
             if (currentWho === 'D') {
                 btn.style.background = '#e0f2fe';
                 btn.style.color = '#0369a1';
                 btn.style.borderColor = '#bae6fd';
             } else {
-                btn.style.background = '#fdf2f0';
-                btn.style.color = '#e27d60';
-                btn.style.borderColor = '#f5c6cb';
+                btn.style.background = '#fff7ed';
+                btn.style.color = '#c2410c';
+                btn.style.borderColor = '#ffedd5';
             }
         }
 
