@@ -3,188 +3,240 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Our Sweet Story 💍</title>
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Our Sweet Journal & Love Space</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@450;600&family=Inter:wght@300;400;500;600&display=swap');
-        body { font-family: 'Inter', 'Noto Serif SC', serif; }
+        :root {
+            --bg-color: #fcf6f5;
+            --card-bg: #ffffff;
+            --primary-color: #e27d60;
+            --secondary-color: #85dcba;
+            --text-color: #555555;
+            --heading-color: #333333;
+            --border-color: #f0dede;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+        }
+        .container {
+            width: 100%;
+            max-width: 600px;
+            background: var(--card-bg);
+            min-height: 100vh;
+            box-shadow: 0 0 20px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+        }
+        header {
+            padding: 20px;
+            text-align: center;
+            border-bottom: 1px solid var(--border-color);
+            background: #fff;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        h1 {
+            color: var(--primary-color);
+            margin: 0 0 5px 0;
+            font-size: 1.3rem;
+            text-align: left;
+        }
+        .subtitle {
+            font-size: 0.8rem;
+            color: #888;
+            text-align: left;
+        }
+        .content-area {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        /* 密码锁定屏样式 */
+        #lock-screen {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--bg-color);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .lock-box {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            text-align: center;
+            width: 80%;
+            max-width: 320px;
+        }
+        .lock-box input {
+            width: 80%;
+            padding: 10px;
+            margin: 15px 0;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            text-align: center;
+            font-size: 1rem;
+        }
+        .lock-box button {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        /* 卡片样式 */
+        .card {
+            background: #fff;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+        }
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            color: #aaa;
+            margin-bottom: 8px;
+        }
+        textarea {
+            width: 100%;
+            height: 80px;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            resize: none;
+            box-sizing: border-box;
+            font-family: inherit;
+            margin-bottom: 10px;
+        }
+        button.primary-btn {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            width: 100%;
+        }
+        .sync-status {
+            font-size: 0.75rem;
+            text-align: right;
+            color: #888;
+            margin-bottom: 10px;
+        }
+        .lang-btn {
+            background: #fdf2f0;
+            border: 1px solid #f5c6cb;
+            color: var(--primary-color);
+            padding: 5px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
     </style>
 </head>
-<body class="bg-rose-50/50 text-slate-800 min-h-screen flex flex-col">
+<body>
 
-    <!-- ================= 1. 密码保护遮罩层 ================= -->
-    <div id="lock-screen" class="fixed inset-0 bg-rose-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl text-center space-y-6 border border-rose-100">
-            <div class="w-16 h-16 bg-rose-100 text-rose-500 rounded-full flex items-center justify-center mx-auto text-2xl shadow-inner">
-                💌
-            </div>
-            <div>
-                <h2 class="text-xl font-bold text-slate-800" data-i18n="lock_title">Our Secret Space</h2>
-                <p class="text-xs text-slate-400 mt-1" data-i18n="lock_subtitle">请输入专属暗号（纪念日数字）解锁</p>
-            </div>
-            <form onsubmit="unlockSpace(event)" class="space-y-3">
-                <input type="password" id="passcode-input" placeholder="例如：MMDD" required 
-                       class="w-full text-center tracking-widest bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-lg focus:outline-none focus:ring-2 focus:ring-rose-400">
-                <button type="submit" class="w-full bg-rose-500 hover:bg-rose-600 text-white font-semibold py-3 rounded-xl transition shadow-md shadow-rose-200" data-i18n="lock_btn">
-                    开启我们的故事
-                </button>
-            </form>
-            <p id="error-tip" class="text-xs text-rose-500 hidden" data-i18n="lock_error">密码不对哦，再试一次~</p>
+    <!-- 密码验证遮罩层 -->
+    <div id="lock-screen">
+        <div class="lock-box">
+            <h3 data-i18n="lock_title">🔒 我们的专属空间</h3>
+            <p style="font-size: 0.85rem; color: #666;" data-i18n="lock_subtitle">请输入访问密码</p>
+            <input type="password" id="pass-input" placeholder="请输入密码">
+            <br>
+            <button onclick="checkPass()" data-i18n="lock_btn">进入</button>
         </div>
     </div>
 
-    <!-- ================= 2. 主体内容（解锁后可见） ================= -->
-    <div id="main-content" class="flex-1 flex flex-col hidden">
-
-        <!-- Header / Banner -->
-        <header class="bg-white border-b border-rose-100 py-6 px-6 shadow-sm">
-            <div class="max-w-2xl mx-auto flex justify-between items-center">
-                <div>
-                    <h1 class="text-xl font-bold text-rose-600 flex items-center gap-2">
-                        ✨ <span data-i18n="main_title">我们的专属恋爱手帐</span>
-                    </h1>
-                    <p class="text-xs text-slate-400 mt-0.5" data-i18n="main_subtitle">记录属于我们每一个闪闪发光的日子</p>
-                </div>
-                <div class="flex items-center gap-4">
-                    <div class="text-right">
-                        <div class="text-xs text-rose-400 font-semibold" data-i18n="love_label">恋爱中</div>
-                        <div class="text-sm font-bold text-slate-700"><span id="love-days">--</span> <span data-i18n="days_unit">天</span></div>
-                    </div>
-                    <!-- Language Toggle Button -->
-                    <button onclick="toggleLanguage()" class="bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs px-2.5 py-1.5 rounded-lg border border-rose-200 transition font-medium">
-                        <span id="lang-btn-text">EN</span>
-                    </button>
-                </div>
+    <div class="container">
+        <header>
+            <div>
+                <h1 data-i18n="main_title">Our Sweet Journal</h1>
+                <div class="subtitle" id="days-counter">记录我们的每一天</div>
             </div>
+            <button class="lang-btn" onclick="toggleLanguage()" id="lang-btn-text">EN</button>
         </header>
 
-        <!-- Navigation Tabs -->
-        <nav class="max-w-2xl w-full mx-auto px-4 mt-6">
-            <div class="flex bg-rose-100/60 p-1.5 rounded-2xl text-sm font-medium gap-1 text-slate-600">
-                <button onclick="switchTab('timeline')" id="btn-timeline" class="flex-1 py-2.5 rounded-xl bg-white text-rose-600 shadow-sm transition" data-i18n="tab_timeline">⏳ 时间轴</button>
-                <button onclick="switchTab('bucket')" id="btn-bucket" class="flex-1 py-2.5 rounded-xl transition" data-i18n="tab_bucket">🎯 心愿清单</button>
-                <button onclick="switchTab('notes')" id="btn-notes" class="flex-1 py-2.5 rounded-xl transition" data-i18n="tab_notes">📝 碎碎念</button>
-            </div>
-        </nav>
-
-        <!-- Main Content Container -->
-        <main class="max-w-2xl w-full mx-auto p-4 flex-1 space-y-6 mb-12">
-
-            <!-- Tab 1: Timeline (时间轴) -->
-            <div id="tab-timeline" class="space-y-4">
-                <div class="bg-white p-5 rounded-2xl shadow-sm border border-rose-100 space-y-3">
-                    <h3 class="text-sm font-bold text-rose-500" data-i18n="t_box_title">✨ 记录新的高光时刻</h3>
-                    <form onsubmit="addTimelineItem(event)" class="space-y-3">
-                        <input type="date" id="t-date" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-400">
-                        <input type="text" id="t-title" data-i18n-placeholder="t_title_ph" placeholder="事件标题 (例如：第一次一起去海边)" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-400">
-                        <textarea id="t-desc" rows="2" data-i18n-placeholder="t_desc_ph" placeholder="当时的心情或小故事..." class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-400"></textarea>
-                        <button type="submit" class="w-full bg-rose-500 hover:bg-rose-600 text-white font-semibold py-2 rounded-xl text-sm transition" data-i18n="t_btn">添加回忆</button>
-                    </form>
-                </div>
-
-                <div id="timeline-list" class="space-y-3">
-                    <!-- Dynamic Timeline -->
-                </div>
+        <div class="content-area">
+            <div class="sync-status" id="sync-status">状态: 准备就绪</div>
+            
+            <!-- 发布新内容区域 -->
+            <div class="card">
+                <textarea id="new-post-content" data-i18n-ph="post_ph" placeholder="今天发生了什么甜蜜的事，写下来吧..."></textarea>
+                <button class="primary-btn" onclick="addNewPost()" data-i18n="post_btn">发布到云端同步</button>
             </div>
 
-            <!-- Tab 2: Bucket List (心愿清单) -->
-            <div id="tab-bucket" class="space-y-4 hidden">
-                <div class="bg-white p-5 rounded-2xl shadow-sm border border-rose-100 space-y-3">
-                    <h3 class="text-sm font-bold text-rose-500" data-i18n="b_box_title">🎯 我们想一起做的事</h3>
-                    <form onsubmit="addBucketItem(event)" class="flex gap-2">
-                        <input type="text" id="b-text" data-i18n-placeholder="b_text_ph" placeholder="输入愿望 (例如：一起学做某道菜)..." required class="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-400">
-                        <button type="submit" class="bg-rose-500 hover:bg-rose-600 text-white px-4 py-2 rounded-xl text-sm transition" data-i18n="b_btn">添加</button>
-                    </form>
-                </div>
-
-                <div id="bucket-list" class="space-y-2">
-                    <!-- Dynamic Bucket List -->
-                </div>
+            <!-- 内容列表展示区 -->
+            <div id="posts-container">
+                <!-- 动态加载内容 -->
             </div>
-
-            <!-- Tab 3: Daily Notes (碎碎念) -->
-            <div id="tab-notes" class="space-y-4 hidden">
-                <div class="bg-white p-5 rounded-2xl shadow-sm border border-rose-100 space-y-3">
-                    <h3 class="text-sm font-bold text-rose-500" data-i18n="n_box_title">💌 今日小情话 / 碎碎念</h3>
-                    <form onsubmit="addNoteItem(event)" class="space-y-3">
-                        <textarea id="n-content" rows="3" data-i18n-placeholder="n_content_ph" placeholder="今天发生了什么好玩的事，或者想对Ta说的话..." required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-400"></textarea>
-                        <button type="submit" class="w-full bg-rose-500 hover:bg-rose-600 text-white font-semibold py-2 rounded-xl text-sm transition" data-i18n="n_btn">发送悄悄话</button>
-                    </form>
-                </div>
-
-                <div id="notes-list" class="space-y-3">
-                    <!-- Dynamic Notes -->
-                </div>
-            </div>
-
-        </main>
-
-        <!-- Footer -->
-        <footer class="text-center py-4 text-xs text-slate-400 border-t border-rose-100 mt-auto" data-i18n="footer">
-            Made with love, exclusively for two of us. ❤️
-        </footer>
-
+        </div>
     </div>
 
-    <!-- JavaScript Logic & Bilingual Dictionary -->
     <script>
-        // 🔒 设置你们的专属解锁密码
-        const SECRET_PASS = "42924"; 
-        // ⏳ 设置你们恋爱开始的纪念日
-        const LOVE_START_DATE = "2026-04-06"; 
+        // ================= 配置区域 =================
+        const SECRET_PASS = "42924"; // 你们的专属密码
+        const LOVE_START_DATE = "2026-04-06"; // 在一起的纪念日
 
-        // 语言字典
+        // JsonBin.io 配置（换成你自己的 Key 和 Bin ID 即可实现双端同步）
+        const JSONBIN_MASTER_KEY = "$2a$10$Hb.fuU6lxi7Nz83SOJDQou41uaW.bJ8ivHQXTn8aKB5KPd0QGXt12"; 
+        const JSONBIN_BIN_ID = "YOUR_BIN_ID_HERE";
+        // ============================================
+
+        // 双语字典
         const i18n = {
             zh: {
-                lock_title: "Our Secret Space",
-                lock_subtitle: "请输入专属暗号（纪念日数字）解锁",
-                lock_btn: "开启我们的故事",
-                lock_error: "密码不对哦，再试一次~",
-                main_title: "我们的专属恋爱手帐",
-                main_subtitle: "记录属于我们每一个闪闪发光的日子",
-                love_label: "恋爱中",
-                days_unit: "天",
-                tab_timeline: "⏳ 时间轴",
-                tab_bucket: "🎯 心愿清单",
-                tab_notes: "📝 碎碎念",
-                t_box_title: "✨ 记录新的高光时刻",
-                t_title_ph: "事件标题 (例如：第一次一起去海边)",
-                t_desc_ph: "当时的心情或小故事...",
-                t_btn: "添加回忆",
-                b_box_title: "🎯 我们想一起做的事",
-                b_text_ph: "输入愿望 (例如：一起学做某道菜)...",
-                b_btn: "添加",
-                n_box_title: "💌 今日小情话 / 碎碎念",
-                n_content_ph: "今天发生了什么好玩的事，或者想对Ta说的话...",
-                n_btn: "发送悄悄话",
-                footer: "Made with love, exclusively for two of us. ❤️",
-                lang_btn: "EN"
+                lock_title: "🔒 我们的专属空间",
+                lock_subtitle: "请输入访问密码",
+                lock_btn: "进入",
+                main_title: "Our Sweet Journal",
+                post_ph: "今天发生了什么甜蜜的事，写下来吧...",
+                post_btn: "发布到云端同步",
+                sync_ready: "状态: 准备就绪",
+                sync_loading: "正在从云端同步...",
+                sync_success: "状态: 已与云端同步最新数据 ✨",
+                sync_error: "状态: 云端同步失败，使用本地缓存",
+                sync_uploading: "正在同步到云端...",
+                sync_done: "状态: 同步成功！双方可见 ☁️",
+                empty_text: "还没有记录，快写下第一条吧~",
+                days_prefix: "我们已经在一起第 ",
+                days_suffix: " 天啦 ❤️",
+                lang_switch: "EN"
             },
             en: {
-                lock_title: "Our Secret Space",
-                lock_subtitle: "Enter passcode (anniversary digits) to unlock",
-                lock_btn: "Open Our Story",
-                lock_error: "Incorrect passcode, try again~",
-                main_title: "Our Sweet Love Journal",
-                main_subtitle: "Recording every glowing day of us",
-                love_label: "In Love",
-                days_unit: "Days",
-                tab_timeline: "⏳ Timeline",
-                tab_bucket: "🎯 Bucket List",
-                tab_notes: "📝 Notes",
-                t_box_title: "✨ Record a New Milestone",
-                t_title_ph: "Title (e.g., First trip to the beach)",
-                t_desc_ph: "Feelings or short story...",
-                t_btn: "Add Memory",
-                b_box_title: "🎯 Things To Do Together",
-                b_text_ph: "Enter a wish (e.g., Cook dinner together)...",
-                b_btn: "Add",
-                n_box_title: "💌 Daily Sweet Notes",
-                n_content_ph: "What happened today, or something to say to Ta...",
-                n_btn: "Send Note",
-                footer: "Made with love, exclusively for two of us. ❤️",
-                lang_btn: "中文"
+                lock_title: "🔒 Our Secret Space",
+                lock_subtitle: "Please enter passcode",
+                lock_btn: "Enter",
+                main_title: "Our Sweet Journal",
+                post_ph: "What sweet thing happened today? Write it down...",
+                post_btn: "Publish to Cloud",
+                sync_ready: "Status: Ready",
+                sync_loading: "Syncing from cloud...",
+                sync_success: "Status: Synced with cloud ✨",
+                sync_error: "Status: Cloud sync failed, using local cache",
+                sync_uploading: "Uploading to cloud...",
+                sync_done: "Status: Synced successfully! Visible to both ☁️",
+                empty_text: "No records yet, write the first one~",
+                days_prefix: "We have been together for ",
+                days_suffix: " days ❤️",
+                lang_switch: "中文"
             }
         };
 
@@ -194,173 +246,153 @@
             currentLang = currentLang === 'zh' ? 'en' : 'zh';
             localStorage.setItem('love_lang', currentLang);
             updateTexts();
+            calcDays();
         }
 
         function updateTexts() {
             const dict = i18n[currentLang];
-            document.getElementById('lang-btn-text').innerText = currentLang === 'zh' ? 'EN' : '中文';
+            document.getElementById('lang-btn-text').innerText = dict.lang_switch;
             
-            // 更新所有带 data-i18n 属性的标签
             document.querySelectorAll('[data-i18n]').forEach(el => {
                 const key = el.getAttribute('data-i18n');
                 if (dict[key]) el.innerText = dict[key];
             });
 
-            // 更新所有带 placeholder 的输入框
-            document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
-                const key = el.getAttribute('data-i18n-placeholder');
+            document.querySelectorAll('[data-i18n-ph]').forEach(el => {
+                const key = el.getAttribute('data-i18n-ph');
                 if (dict[key]) el.placeholder = dict[key];
             });
         }
 
-        function unlockSpace(e) {
-            e.preventDefault();
-            const val = document.getElementById('passcode-input').value;
-            if (val === SECRET_PASS) {
-                document.getElementById('lock-screen').classList.add('hidden');
-                document.getElementById('main-content').classList.remove('hidden');
+        // 检查密码
+        function checkPass() {
+            const input = document.getElementById('pass-input').value;
+            if (input === SECRET_PASS) {
+                document.getElementById('lock-screen').style.display = 'none';
+                localStorage.setItem('auth_passed', 'true');
                 initApp();
             } else {
-                const tip = document.getElementById('error-tip');
-                tip.classList.remove('hidden');
+                alert(currentLang === 'zh' ? '密码不对哦，再想想~' : 'Incorrect passcode, try again~');
             }
         }
 
-        // Calculate Days
-        function calculateLoveDays() {
-            const start = new Date(LOVE_START_DATE);
-            const now = new Date();
-            const diff = Math.floor((now - start) / (1000 * 60 * 60 * 24));
-            document.getElementById('love-days').innerText = Math.max(0, diff);
-        }
-
-        // Tab Switching
-        function switchTab(tab) {
-            ['timeline', 'bucket', 'notes'].forEach(t => {
-                document.getElementById(`tab-${t}`).classList.add('hidden');
-                document.getElementById(`btn-${t}`).className = "flex-1 py-2.5 rounded-xl transition text-slate-600";
-            });
-            document.getElementById(`tab-${tab}`).classList.remove('hidden');
-            document.getElementById(`btn-${tab}`).className = "flex-1 py-2.5 rounded-xl bg-white text-rose-600 shadow-sm transition font-bold";
-        }
-
-        // Data Stores
-        let timelineData = JSON.parse(localStorage.getItem('love_timeline')) || [
-            { date: "2026-01-01", title: "确立关系 🎉 / Official Relationship", desc: "属于我们两个人的故事正式开始。" }
-        ];
-        let bucketData = JSON.parse(localStorage.getItem('love_bucket')) || [
-            { text: "一起去墨尔本看海 🌊 / See the ocean in Melbourne", done: false },
-            { text: "一起做一顿丰盛的烛光晚餐 🍷 / Candlelight dinner", done: true }
-        ];
-        let notesData = JSON.parse(localStorage.getItem('love_notes')) || [
-            { date: "2026-10-01", content: "今天也是超级喜欢你的一天！" }
-        ];
-
-        function initApp() {
+        // 页面加载时检查是否验证过
+        window.onload = function() {
             updateTexts();
-            calculateLoveDays();
-            renderTimeline();
-            renderBucket();
-            renderNotes();
-            document.getElementById('t-date').valueAsDate = new Date();
+            if (localStorage.getItem('auth_passed') === 'true') {
+                document.getElementById('lock-screen').style.display = 'none';
+                initApp();
+            }
+            calcDays();
         }
 
-        // Timeline Functions
-        function addTimelineItem(e) {
-            e.preventDefault();
-            const date = document.getElementById('t-date').value;
-            const title = document.getElementById('t-title').value;
-            const desc = document.getElementById('t-desc').value;
-            timelineData.unshift({ date, title, desc });
-            localStorage.setItem('love_timeline', JSON.stringify(timelineData));
-            e.target.reset();
-            document.getElementById('t-date').valueAsDate = new Date();
-            renderTimeline();
+        // 计算在一起的天数
+        function calcDays() {
+            const start = new Date(LOVE_START_DATE);
+            const today = new Date();
+            const diff = Math.floor((today - start) / (1000 * 60 * 60 * 24));
+            const dict = i18n[currentLang];
+            document.getElementById('days-counter').innerText = `${dict.days_prefix}${Math.max(0, diff)}${dict.days_suffix}`;
         }
 
-        function renderTimeline() {
-            const el = document.getElementById('timeline-list');
-            el.innerHTML = timelineData.map((item, idx) => `
-                <div class="bg-white p-4 rounded-2xl shadow-sm border border-rose-100 relative pl-6 border-l-4 border-l-rose-400">
-                    <div class="flex justify-between items-center">
-                        <span class="text-xs text-rose-500 font-mono font-semibold">${item.date}</span>
-                        <button onclick="deleteTimeline(${idx})" class="text-slate-300 hover:text-red-400 text-xs">✕</button>
+        let posts = [];
+
+        // 初始化应用：从云端拉取数据
+        async function initApp() {
+            await fetchFromCloud();
+            renderPosts();
+        }
+
+        // 从云端加载数据
+        async function fetchFromCloud() {
+            const dict = i18n[currentLang];
+            if (JSONBIN_MASTER_KEY.includes("YOUR_MASTER")) {
+                document.getElementById('sync-status').innerText = currentLang === 'zh' ? "提示: 尚未配置 JsonBin 密钥，当前为本地模式" : "Tip: JsonBin key not set, local mode";
+                posts = JSON.parse(localStorage.getItem('local_posts') || '[]');
+                return;
+            }
+
+            try {
+                document.getElementById('sync-status').innerText = dict.sync_loading;
+                const response = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}/latest`, {
+                    headers: { 'X-Master-Key': JSONBIN_MASTER_KEY }
+                });
+                const data = await response.json();
+                posts = data.record.posts || [];
+                document.getElementById('sync-status').innerText = dict.sync_success;
+            } catch (error) {
+                console.error("同步失败", error);
+                document.getElementById('sync-status').innerText = dict.sync_error;
+                posts = JSON.parse(localStorage.getItem('local_posts') || '[]');
+            }
+        }
+
+        // 保存数据到云端
+        async function saveToCloud() {
+            const dict = i18n[currentLang];
+            localStorage.setItem('local_posts', JSON.stringify(posts)); 
+
+            if (JSONBIN_MASTER_KEY.includes("YOUR_MASTER")) return;
+
+            try {
+                document.getElementById('sync-status').innerText = dict.sync_uploading;
+                await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Master-Key': JSONBIN_MASTER_KEY
+                    },
+                    body: JSON.stringify({ posts: posts })
+                });
+                document.getElementById('sync-status').innerText = dict.sync_done;
+            } catch (error) {
+                console.error("保存云端失败", error);
+            }
+        }
+
+        // 发布新内容
+        async function addNewPost() {
+            const textContent = document.getElementById('new-post-content').value.trim();
+            if (!textContent) {
+                alert(currentLang === 'zh' ? '内容不能为空哦！' : 'Content cannot be empty!');
+                return;
+            }
+
+            const newPost = {
+                id: Date.now(),
+                time: new Date().toLocaleString(),
+                content: textContent
+            };
+
+            posts.unshift(newPost);
+            document.getElementById('new-post-content').value = '';
+            
+            renderPosts();
+            await saveToCloud();
+        }
+
+        // 渲染页面列表
+        function renderPosts() {
+            const container = document.getElementById('posts-container');
+            container.innerHTML = '';
+            const dict = i18n[currentLang];
+            
+            if (posts.length === 0) {
+                container.innerHTML = `<p style="text-align:center; color:#aaa; font-size:0.9rem;">${dict.empty_text}</p>`;
+                return;
+            }
+
+            posts.forEach(post => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.innerHTML = `
+                    <div class="card-header">
+                        <span>${post.time}</span>
                     </div>
-                    <h4 class="font-bold text-slate-800 text-base mt-1">${item.title}</h4>
-                    <p class="text-sm text-slate-600 mt-1">${item.desc}</p>
-                </div>
-            `).join('');
-        }
-
-        function deleteTimeline(idx) {
-            timelineData.splice(idx, 1);
-            localStorage.setItem('love_timeline', JSON.stringify(timelineData));
-            renderTimeline();
-        }
-
-        // Bucket Functions
-        function addBucketItem(e) {
-            e.preventDefault();
-            const text = document.getElementById('b-text').value;
-            bucketData.unshift({ text, done: false });
-            localStorage.setItem('love_bucket', JSON.stringify(bucketData));
-            e.target.reset();
-            renderBucket();
-        }
-
-        function toggleBucket(idx) {
-            bucketData[idx].done = !bucketData[idx].done;
-            localStorage.setItem('love_bucket', JSON.stringify(bucketData));
-            renderBucket();
-        }
-
-        function deleteBucket(idx) {
-            bucketData.splice(idx, 1);
-            localStorage.setItem('love_bucket', JSON.stringify(bucketData));
-            renderBucket();
-        }
-
-        function renderBucket() {
-            const el = document.getElementById('bucket-list');
-            el.innerHTML = bucketData.map((item, idx) => `
-                <div class="bg-white p-3.5 rounded-xl shadow-sm border border-rose-100 flex items-center justify-between">
-                    <label class="flex items-center gap-3 cursor-pointer flex-1">
-                        <input type="checkbox" ${item.done ? 'checked' : ''} onchange="toggleBucket(${idx})" class="w-4 h-4 text-rose-500 rounded border-slate-300 focus:ring-rose-400">
-                        <span class="text-sm ${item.done ? 'line-through text-slate-400' : 'text-slate-700 font-medium'}">${item.text}</span>
-                    </label>
-                    <button onclick="deleteBucket(${idx})" class="text-slate-300 hover:text-red-400 text-xs px-2">✕</button>
-                </div>
-            `).join('');
-        }
-
-        // Notes Functions
-        function addNoteItem(e) {
-            e.preventDefault();
-            const content = document.getElementById('n-content').value;
-            const date = new Date().toISOString().split('T')[0];
-            notesData.unshift({ date, content });
-            localStorage.setItem('love_notes', JSON.stringify(notesData));
-            e.target.reset();
-            renderNotes();
-        }
-
-        function deleteNote(idx) {
-            notesData.splice(idx, 1);
-            localStorage.setItem('love_notes', JSON.stringify(notesData));
-            renderNotes();
-        }
-
-        function renderNotes() {
-            const el = document.getElementById('notes-list');
-            el.innerHTML = notesData.map((item, idx) => `
-                <div class="bg-white p-4 rounded-2xl shadow-sm border border-rose-100">
-                    <div class="flex justify-between items-center text-xs text-rose-400 font-mono mb-1">
-                        <span>${item.date}</span>
-                        <button onclick="deleteNote(${idx})" class="text-slate-300 hover:text-red-400">✕</button>
-                    </div>
-                    <p class="text-sm text-slate-700 leading-relaxed">${item.content}</p>
-                </div>
-            `).join('');
+                    <div style="white-space: pre-wrap; font-size: 0.95rem; line-height: 1.4;">${post.content}</div>
+                `;
+                container.appendChild(card);
+            });
         }
     </script>
 </body>
