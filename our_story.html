@@ -148,6 +148,7 @@
             padding: 15px;
             margin-bottom: 15px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+            position: relative;
         }
         .card-header {
             display: flex;
@@ -222,21 +223,37 @@
             background: #f8fafc;
             color: #334155;
         }
+        /* 通用小按钮（编辑/删除） */
+        .item-action-btn {
+            background: none;
+            border: none;
+            color: #aaa;
+            cursor: pointer;
+            font-size: 0.8rem;
+            padding: 2px 5px;
+        }
+        .item-action-btn:hover {
+            color: var(--primary-color);
+        }
         /* 心愿单样式 */
         .bucket-item {
+            background: #fff;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 10px 12px;
+            margin-bottom: 8px;
             display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 8px 0;
-            border-bottom: 1px dashed var(--border-color);
+            flex-direction: column;
+            gap: 6px;
             transition: all 0.2s ease;
         }
-        .bucket-item.completed span {
-            text-decoration: line-through;
-            color: #ccc !important;
-        }
         .bucket-item.completed {
-            opacity: 0.5;
+            opacity: 0.6;
+            background: #fafafa;
+        }
+        .bucket-item.completed .bucket-text {
+            text-decoration: line-through;
+            color: #aaa !important;
         }
     </style>
 </head>
@@ -245,11 +262,11 @@
     <!-- 密码验证遮罩层 -->
     <div id="lock-screen">
         <div class="lock-box">
-            <h3 data-i18n="lock_title">🔒 Our Secret Space</h3>
-            <p style="font-size: 0.85rem; color: #666;" data-i18n="lock_subtitle">Please enter passcode</p>
+            <h3 data-i18n="lock_title">🔒 我们的专属空间</h3>
+            <p style="font-size: 0.85rem; color: #666;" data-i18n="lock_subtitle">请输入访问密码</p>
             <input type="password" id="pass-input" placeholder="Passcode">
             <br>
-            <button onclick="checkPass()" data-i18n="lock_btn">Enter</button>
+            <button onclick="checkPass()" data-i18n="lock_btn">进入</button>
         </div>
     </div>
 
@@ -280,17 +297,17 @@
             <!-- 版块 2：心愿清单 (Bucket List) -->
             <div id="tab-bucket" class="tab-content">
                 <div class="card">
-                    <h3 style="margin-top:0; font-size:1rem; color:var(--primary-color);" data-i18n="bucket_title">✨ Our Bucket List</h3>
+                    <h3 style="margin-top:0; font-size:1rem; color:var(--primary-color);" data-i18n="bucket_title">✨ 我们的愿望清单</h3>
                     <input type="text" id="new-bucket-input" data-i18n-ph="bucket_ph" placeholder="Add a new dream to do together...">
                     <button class="primary-btn" onclick="addBucketItem()" data-i18n="bucket_btn">Add Wish</button>
                 </div>
-                <div class="card" id="bucket-container"></div>
+                <div id="bucket-container"></div>
             </div>
 
-            <!-- 版块 3：做过的事情 (Memories / 也就是足迹) -->
+            <!-- 版块 3：做过的事情 (Memories / 足迹) -->
             <div id="tab-memories" class="tab-content">
                 <div class="card">
-                    <h3 style="margin-top:0; font-size:1rem; color:var(--primary-color);" data-i18n="memories_title">🌟 Things We've Done</h3>
+                    <h3 style="margin-top:0; font-size:1rem; color:var(--primary-color);" data-i18n="memories_title">🌟 我们做过的事情</h3>
                     <textarea id="new-memory-content" data-i18n-ph="memories_ph" placeholder="Record a wonderful thing we have accomplished together..."></textarea>
                     <button class="primary-btn" onclick="addMemoryItem()" data-i18n="memories_btn">Add Memory</button>
                 </div>
@@ -300,7 +317,7 @@
             <!-- 版块 4：纪念小纸条 (Notes) -->
             <div id="tab-notes" class="tab-content">
                 <div class="card">
-                    <h3 style="margin-top:0; font-size:1rem; color:var(--primary-color);" data-i18n="notes_title">💌 Sweet Notes</h3>
+                    <h3 style="margin-top:0; font-size:1rem; color:var(--primary-color);" data-i18n="notes_title">💌 浪漫小纸条</h3>
                     <textarea id="new-note-content" data-i18n-ph="notes_ph" placeholder="Leave a romantic note for each other..."></textarea>
                     <button class="primary-btn" onclick="addNoteItem()" data-i18n="notes_btn">Leave Note</button>
                 </div>
@@ -329,7 +346,7 @@
         </nav>
     </div>
 
-      <script>
+    <script>
         // ================= 配置区域 =================
         const SECRET_PASS = "42924"; // 专属密码
         const LOVE_START_DATE = "2026-04-06"; // 你们在一起的纪念日
@@ -372,7 +389,12 @@
                 days_prefix: "我们已经在一起第 ",
                 days_suffix: " 天啦 ❤️",
                 lang_switch: "EN",
-                ask_to_memory: "太棒啦！要把这个愿望记录到「足迹」中吗？🌟"
+                ask_to_memory: "太棒啦！要把这个愿望记录到「足迹」中吗？🌟",
+                edit_prompt: "修改你的愿望内容：",
+                edit_post: "修改日记内容：",
+                edit_memory: "修改回忆内容：",
+                edit_note: "修改纸条内容：",
+                delete_confirm: "确定要删除这条记录吗？"
             },
             en: {
                 lock_title: "🔒 Our Secret Space",
@@ -404,7 +426,12 @@
                 days_prefix: "We have been together for ",
                 days_suffix: " days ❤️",
                 lang_switch: "中文",
-                ask_to_memory: "Awesome! Would you like to add this completed wish to your 'Memories'? 🌟"
+                ask_to_memory: "Awesome! Would you like to add this completed wish to your 'Memories'? 🌟",
+                edit_prompt: "Edit your wish:",
+                edit_post: "Edit journal content:",
+                edit_memory: "Edit memory content:",
+                edit_note: "Edit note content:",
+                delete_confirm: "Are you sure you want to delete this item?"
             }
         };
 
@@ -460,7 +487,6 @@
             });
         }
 
-        // 切换导航版块
         function switchTab(tabName, btnElement) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.bottom-nav .nav-item').forEach(el => el.classList.remove('active'));
@@ -518,7 +544,10 @@
                 });
                 const data = await response.json();
                 appData = data.record || { posts: [], bucket: [], memories: [], notes: [] };
+                if (!appData.posts) appData.posts = [];
+                if (!appData.bucket) appData.bucket = [];
                 if (!appData.memories) appData.memories = [];
+                if (!appData.notes) appData.notes = [];
                 document.getElementById('sync-status').innerText = dict.sync_success;
             } catch (error) {
                 console.error("同步失败", error);
@@ -531,7 +560,10 @@
             const local = localStorage.getItem('love_app_data');
             if (local) {
                 appData = JSON.parse(local);
+                if (!appData.posts) appData.posts = [];
+                if (!appData.bucket) appData.bucket = [];
                 if (!appData.memories) appData.memories = [];
+                if (!appData.notes) appData.notes = [];
             }
         }
 
@@ -570,11 +602,12 @@
             return `<span class="badge ${cls}">${w}</span>`;
         }
 
-        // 1. 发布日记
+        // ================= 1. 日记 (Posts) =================
         async function addNewPost() {
             const textContent = document.getElementById('new-post-content').value.trim();
             if (!textContent) return;
 
+            if (!appData.posts) appData.posts = [];
             appData.posts.unshift({
                 id: Date.now(),
                 who: currentWho,
@@ -585,6 +618,27 @@
             
             renderPosts();
             await saveToCloud();
+        }
+
+        async function editPost(id) {
+            const item = appData.posts.find(p => p.id === id);
+            if (!item) return;
+            const dict = i18n[currentLang];
+            const newContent = prompt(dict.edit_post, item.content);
+            if (newContent !== null && newContent.trim() !== "") {
+                item.content = newContent.trim();
+                renderPosts();
+                await saveToCloud();
+            }
+        }
+
+        async function deletePost(id) {
+            const dict = i18n[currentLang];
+            if (confirm(dict.delete_confirm)) {
+                appData.posts = appData.posts.filter(p => p.id !== id);
+                renderPosts();
+                await saveToCloud();
+            }
         }
 
         function renderPosts() {
@@ -603,7 +657,11 @@
                 card.innerHTML = `
                     <div class="card-header">
                         <span>${post.time}</span>
-                        ${getBadgeHtml(post.who)}
+                        <div style="display:flex; align-items:center; gap:6px;">
+                            ${getBadgeHtml(post.who)}
+                            <button class="item-action-btn" onclick="editPost(${post.id})" title="编辑">✏️</button>
+                            <button class="item-action-btn" onclick="deletePost(${post.id})" title="删除">🗑️</button>
+                        </div>
                     </div>
                     <div style="white-space: pre-wrap; font-size: 0.95rem; line-height: 1.4;">${post.content}</div>
                 `;
@@ -611,27 +669,31 @@
             });
         }
 
-        // 2. 心愿单
+        // ================= 2. 愿望清单 (Bucket List) =================
         async function addBucketItem() {
             const text = document.getElementById('new-bucket-input').value.trim();
             if (!text) return;
 
             if (!appData.bucket) appData.bucket = [];
-            appData.bucket.unshift({ id: Date.now(), who: currentWho, text: text, completed: false });
+            appData.bucket.unshift({ 
+                id: Date.now(), 
+                who: currentWho, 
+                time: new Date().toLocaleDateString(), 
+                text: text, 
+                completed: false 
+            });
             document.getElementById('new-bucket-input').value = '';
 
             renderBucket();
             await saveToCloud();
         }
 
-        // 点击心愿完成：变为完成状态，并询问是否同步去足迹
         async function toggleBucket(id) {
             const item = appData.bucket.find(b => b.id === id);
             if (!item) return;
 
             item.completed = !item.completed;
 
-            // 如果刚刚变为已完成状态，询问是否同步到足迹
             if (item.completed) {
                 const dict = i18n[currentLang];
                 if (confirm(dict.ask_to_memory)) {
@@ -649,12 +711,32 @@
             renderMemories();
             await saveToCloud();
 
-            // 如果刚加入了足迹，顺便自动跳转到足迹页面，给用户直观的反馈
             if (item.completed) {
                 const memoriesTabBtn = document.getElementById('nav-btn-memories');
                 if (memoriesTabBtn) {
                     switchTab('memories', memoriesTabBtn);
                 }
+            }
+        }
+
+        async function editBucket(id) {
+            const item = appData.bucket.find(b => b.id === id);
+            if (!item) return;
+            const dict = i18n[currentLang];
+            const newText = prompt(dict.edit_prompt, item.text);
+            if (newText !== null && newText.trim() !== "") {
+                item.text = newText.trim();
+                renderBucket();
+                await saveToCloud();
+            }
+        }
+
+        async function deleteBucket(id) {
+            const dict = i18n[currentLang];
+            if (confirm(dict.delete_confirm)) {
+                appData.bucket = appData.bucket.filter(b => b.id !== id);
+                renderBucket();
+                await saveToCloud();
             }
         }
 
@@ -672,26 +754,24 @@
                 const div = document.createElement('div');
                 div.className = `bucket-item ${item.completed ? 'completed' : ''}`;
                 div.innerHTML = `
-                    <div style="display:flex; align-items:center; gap:8px; flex:1; cursor:pointer;" onclick="toggleBucket(${item.id})">
-                        <span>${item.completed ? '✅' : '⏳'}</span>
-                        <span style="font-size:0.95rem;">${item.text}</span>
+                    <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.75rem; color:#aaa;">
+                        <span>📅 ${item.time || ''}</span>
+                        <div style="display:flex; align-items:center; gap:6px;">
+                            ${getBadgeHtml(item.who)}
+                            <button class="item-action-btn" onclick="editBucket(${item.id})" title="编辑">✏️</button>
+                            <button class="item-action-btn" onclick="deleteBucket(${item.id})" title="删除">🗑️</button>
+                        </div>
                     </div>
-                    <div style="display:flex; align-items:center; gap:8px;">
-                        ${getBadgeHtml(item.who)}
-                        <button style="border:none; background:none; color:#ccc; cursor:pointer;" onclick="deleteBucket(${item.id})">×</button>
+                    <div style="display:flex; align-items:center; gap:8px; cursor:pointer;" onclick="toggleBucket(${item.id})">
+                        <span style="font-size:1.1rem;">${item.completed ? '✅' : '⏳'}</span>
+                        <span class="bucket-text" style="font-size:0.95rem; flex:1;">${item.text}</span>
                     </div>
                 `;
                 container.appendChild(div);
             });
         }
 
-        async function deleteBucket(id) {
-            appData.bucket = appData.bucket.filter(b => b.id !== id);
-            renderBucket();
-            await saveToCloud();
-        }
-
-        // 3. 做过的事情 (Memories)
+        // ================= 3. 足迹 / 回忆 (Memories) =================
         async function addMemoryItem() {
             const text = document.getElementById('new-memory-content').value.trim();
             if (!text) return;
@@ -707,6 +787,27 @@
 
             renderMemories();
             await saveToCloud();
+        }
+
+        async function editMemory(id) {
+            const item = appData.memories.find(m => m.id === id);
+            if (!item) return;
+            const dict = i18n[currentLang];
+            const newContent = prompt(dict.edit_memory, item.content);
+            if (newContent !== null && newContent.trim() !== "") {
+                item.content = newContent.trim();
+                renderMemories();
+                await saveToCloud();
+            }
+        }
+
+        async function deleteMemory(id) {
+            const dict = i18n[currentLang];
+            if (confirm(dict.delete_confirm)) {
+                appData.memories = appData.memories.filter(m => m.id !== id);
+                renderMemories();
+                await saveToCloud();
+            }
         }
 
         function renderMemories() {
@@ -727,7 +828,11 @@
                 card.innerHTML = `
                     <div class="card-header">
                         <span>${memory.time}</span>
-                        ${getBadgeHtml(memory.who)}
+                        <div style="display:flex; align-items:center; gap:6px;">
+                            ${getBadgeHtml(memory.who)}
+                            <button class="item-action-btn" onclick="editMemory(${memory.id})" title="编辑">✏️</button>
+                            <button class="item-action-btn" onclick="deleteMemory(${memory.id})" title="删除">🗑️</button>
+                        </div>
                     </div>
                     <div style="white-space: pre-wrap; font-size: 0.95rem; line-height: 1.4; color: #2d6a4f;">🌟 ${memory.content}</div>
                 `;
@@ -735,7 +840,7 @@
             });
         }
 
-        // 4. 小纸条
+        // ================= 4. 小纸条 (Notes) =================
         async function addNoteItem() {
             const text = document.getElementById('new-note-content').value.trim();
             if (!text) return;
@@ -751,6 +856,27 @@
 
             renderNotes();
             await saveToCloud();
+        }
+
+        async function editNote(id) {
+            const item = appData.notes.find(n => n.id === id);
+            if (!item) return;
+            const dict = i18n[currentLang];
+            const newContent = prompt(dict.edit_note, item.content);
+            if (newContent !== null && newContent.trim() !== "") {
+                item.content = newContent.trim();
+                renderNotes();
+                await saveToCloud();
+            }
+        }
+
+        async function deleteNote(id) {
+            const dict = i18n[currentLang];
+            if (confirm(dict.delete_confirm)) {
+                appData.notes = appData.notes.filter(n => n.id !== id);
+                renderNotes();
+                await saveToCloud();
+            }
         }
 
         function renderNotes() {
@@ -771,7 +897,11 @@
                 card.innerHTML = `
                     <div class="card-header">
                         <span>${note.time}</span>
-                        ${getBadgeHtml(note.who)}
+                        <div style="display:flex; align-items:center; gap:6px;">
+                            ${getBadgeHtml(note.who)}
+                            <button class="item-action-btn" onclick="editNote(${note.id})" title="编辑">✏️</button>
+                            <button class="item-action-btn" onclick="deleteNote(${note.id})" title="删除">🗑️</button>
+                        </div>
                     </div>
                     <div style="white-space: pre-wrap; font-size: 0.95rem; line-height: 1.4; color: #d4a373;">💛 ${note.content}</div>
                 `;
