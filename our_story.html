@@ -356,7 +356,7 @@
         const JSONBIN_BIN_ID = "6abdb802ac6210605a077b5f";
         // ============================================
 
-        let currentWho = localStorage.getItem('love_current_who') || 'F';
+      let currentWho = localStorage.getItem('love_current_who') || 'F';
 
         const i18n = {
             zh: {
@@ -529,6 +529,7 @@
             renderAll();
         }
 
+        // ================= 核心防覆盖修复：云端拉取 =================
         async function fetchFromCloud() {
             const dict = i18n[currentLang];
             if (JSONBIN_MASTER_KEY.includes("YOUR_MASTER")) {
@@ -543,11 +544,21 @@
                     headers: { 'X-Master-Key': JSONBIN_MASTER_KEY }
                 });
                 const data = await response.json();
-                appData = data.record || { posts: [], bucket: [], memories: [], notes: [] };
-                if (!appData.posts) appData.posts = [];
-                if (!appData.bucket) appData.bucket = [];
-                if (!appData.memories) appData.memories = [];
-                if (!appData.notes) appData.notes = [];
+                
+                const cloudData = data.record || {};
+                const hasCloudData = (cloudData.posts?.length > 0) || (cloudData.bucket?.length > 0) || (cloudData.memories?.length > 0) || (cloudData.notes?.length > 0);
+
+                if (hasCloudData) {
+                    appData = {
+                        posts: cloudData.posts || [],
+                        bucket: cloudData.bucket || [],
+                        memories: cloudData.memories || [],
+                        notes: cloudData.notes || []
+                    };
+                } else {
+                    loadLocal();
+                }
+
                 document.getElementById('sync-status').innerText = dict.sync_success;
             } catch (error) {
                 console.error("同步失败", error);
@@ -567,11 +578,19 @@
             }
         }
 
+        // ================= 核心防覆盖修复：云端保存安全锁 =================
         async function saveToCloud() {
             const dict = i18n[currentLang];
             localStorage.setItem('love_app_data', JSON.stringify(appData)); 
 
             if (JSONBIN_MASTER_KEY.includes("YOUR_MASTER")) return;
+
+            // 安全锁：防止任何原因导致的空数据误删云端
+            const totalItems = (appData.posts?.length || 0) + (appData.bucket?.length || 0) + (appData.memories?.length || 0) + (appData.notes?.length || 0);
+            if (totalItems === 0) {
+                console.warn("拦截了一次危险的空数据同步，保护云端不被清空。");
+                return;
+            }
 
             try {
                 document.getElementById('sync-status').innerText = dict.sync_uploading;
@@ -586,6 +605,7 @@
                 document.getElementById('sync-status').innerText = dict.sync_done;
             } catch (error) {
                 console.error("保存云端失败", error);
+                document.getElementById('sync-status').innerText = dict.sync_error;
             }
         }
 
@@ -602,7 +622,7 @@
             return `<span class="badge ${cls}">${w}</span>`;
         }
 
-// ================= 1. 日记 (Posts) =================
+        // ================= 1. 日记 (Posts) =================
         async function addNewPost() {
             const textContent = document.getElementById('new-post-content').value.trim();
             if (!textContent) return;
